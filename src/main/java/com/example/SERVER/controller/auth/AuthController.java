@@ -64,10 +64,13 @@ public class AuthController {
 		
 		// Check null
 		if (currentUserDB != null) {
+			
+			
 			// Thêm thông tin người đăng nhập vào phản hồi ResLoginDTO
 			ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin(
 					currentUserDB.getId(),
-					currentUserDB.getEmail()
+					currentUserDB.getEmail(),
+					roleService.getRoleNameByUserName(currentUserDB.getEmail())
 			);
 			resLoginDTO.setUserLogin(userLogin);
 		}
@@ -181,7 +184,8 @@ public class AuthController {
 			// Thêm thông tin người dùng đăng nhập vào resLoginDTO
 			ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin(
 					currentUserDB.getId(),
-					currentUserDB.getEmail()
+					currentUserDB.getEmail(),
+					currentUserDB.getRoles().toString()
 			);
 			
 			resLoginDTO.setUserLogin(userLogin);
