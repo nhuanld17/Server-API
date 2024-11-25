@@ -159,8 +159,7 @@ public class AuthController {
 		
 		// Liên kết user với candidate và ngược lại
 		Candidate candidate = new Candidate();
-		candidate.setFirstName(registerDTO.getFirstName());
-		candidate.setLastName(registerDTO.getLastName());
+		candidate.setFullName(registerDTO.getFullName());
 		
 		registerUser.setCandidate(candidate);
 		candidate.setUser(registerUser);
@@ -170,8 +169,7 @@ public class AuthController {
 		
 		// Tạo ResRegisterDTO trả về JSON
 		ResRegisterDTO resRegisterDTO = new ResRegisterDTO();
-		resRegisterDTO.setFirstname(registerDTO.getFirstName());
-		resRegisterDTO.setLastname(registerDTO.getLastName());
+		resRegisterDTO.setFullName(registerDTO.getFullName());
 		resRegisterDTO.setEmail(registerDTO.getEmail());
 		resRegisterDTO.setRolename(role.getRoleName());
 		

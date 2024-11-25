@@ -9,7 +9,6 @@ import java.time.Instant;
 @Setter
 public class ResRegisterDTO {
 	private String email;
-	private String firstname;
-	private String lastname;
+	private String fullName;
 	private String rolename;
 }
