@@ -47,7 +47,7 @@ public class AuthController {
 	public ResponseEntity<ResLoginDTO> login(@RequestBody LoginDTO loginDTO) {
 		// Tạo token chứa thông tin là username và password
 		UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-			loginDTO.getUsername(), loginDTO.getPassword()
+			loginDTO.getEmail(), loginDTO.getPassword()
 		);
 
 		// Xác thực người dùng dựa trên authenticationToken vừa mới được tạo
@@ -60,7 +60,7 @@ public class AuthController {
 		ResLoginDTO resLoginDTO  = new ResLoginDTO();
 		
 		// Lấy User từ DB để thêm thông tin vào JSON
-		User currentUserDB = this.userService.handleGetUserByUsername(loginDTO.getUsername());
+		User currentUserDB = this.userService.handleGetUserByUsername(loginDTO.getEmail());
 		
 		// Check null
 		if (currentUserDB != null) {
@@ -83,10 +83,10 @@ public class AuthController {
 		
 		// Tạo refresh_token để lưu vào cơ sở dữ liệu
 		String refresh_token = this.securityUtil.createRefreshToken(
-				loginDTO.getUsername(), resLoginDTO);
+				loginDTO.getEmail(), resLoginDTO);
 		
 		// Update refresh_token ở database của user
-		this.userService.updateUserToken(refresh_token, loginDTO.getUsername());
+		this.userService.updateUserToken(refresh_token, loginDTO.getEmail());
 		
 		// Lưu token vào cookies
 		ResponseCookie responseCookie = ResponseCookie.from("refresh_token", refresh_token)
@@ -101,45 +101,6 @@ public class AuthController {
 				.header(HttpHeaders.SET_COOKIE, responseCookie.toString())
 				.body(resLoginDTO);
 	}
-	
-//	@PostMapping("/auth/register-candidate")
-//	public ResponseEntity<ResRegisterDTO> register(@RequestBody CandidateRegisterDTO candidateRegisterDTO) throws EmailRegisteredException {
-//
-//		// Kiểm tra email đã được đăng kí tài khoản hay chưa
-//		User user = this.userService.handleGetUserByUsername(candidateRegisterDTO.getEmail());
-//
-//		if (user != null) {
-//			throw new EmailRegisteredException("Email này đã được sử dụng");
-//		}
-//
-//		User registerUser = new User();
-//		registerUser.setEmail(candidateRegisterDTO.getEmail());
-//		registerUser.setPassword(candidateRegisterDTO.getPassword());
-//
-//		// Set role
-//		Role role = new Role();
-//		role.setRoleName("ROLE_CANDIDATE");
-//		registerUser.setRoles(Set.of(role));
-//
-//		Candidate candidate = new Candidate();
-//		candidate.setFirstName(candidateRegisterDTO.getFirstName());
-//		candidate.setLastName(candidateRegisterDTO.getLastName());
-//
-//		// Liên kết user với candidate
-//		registerUser.setCandidate(candidate);
-//		// Liên kết candidate với user
-//		candidate.setUser(registerUser);
-//		this.userService.handleRegisterUser(registerUser);
-//
-//		// Tạo ResRegisterDTO trả về JSON
-//		ResRegisterDTO resRegisterDTO = new ResRegisterDTO();
-//		resRegisterDTO.setFirstname(candidateRegisterDTO.getFirstName());
-//		resRegisterDTO.setLastname(candidateRegisterDTO.getLastName());
-//		resRegisterDTO.setEmail(candidateRegisterDTO.getEmail());
-//		resRegisterDTO.setRolename(role.getRoleName());
-//
-//	    return ResponseEntity.status(HttpStatus.CREATED).body(resRegisterDTO);
-//	}
 	
 	@PostMapping("/auth/register")
 	public ResponseEntity<ResRegisterDTO> register(@RequestBody RegisterDTO registerDTO) throws EmailRegisteredException {
