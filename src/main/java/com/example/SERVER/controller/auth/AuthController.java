@@ -152,6 +152,7 @@ public class AuthController {
 			// Phần thêm thông tin người dùng đã đăng nhập vào resLoginDTO
 			userLogin.setId(currentUserDB.getId());
 			userLogin.setEmail(currentUserDB.getEmail());
+			userLogin.setRoleName(roleService.getRoleNameByUserName(currentUserDB.getEmail()));
 		}
 		
 		return ResponseEntity.ok(userLogin);
@@ -185,7 +186,7 @@ public class AuthController {
 			ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin(
 					currentUserDB.getId(),
 					currentUserDB.getEmail(),
-					currentUserDB.getRoles().toString()
+					roleService.getRoleNameByUserName(currentUserDB.getEmail())
 			);
 			
 			resLoginDTO.setUserLogin(userLogin);
