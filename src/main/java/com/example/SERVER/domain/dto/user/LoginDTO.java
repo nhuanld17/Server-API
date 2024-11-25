@@ -1,4 +1,11 @@
 package com.example.SERVER.domain.dto.user;
 
-public record LoginDTO(String username, String password) {
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class LoginDTO {
+	private String username;
+	private String password;
 }

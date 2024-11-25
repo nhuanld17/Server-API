@@ -1,6 +1,7 @@
 package com.example.SERVER.util.exception;
 
 import com.example.SERVER.domain.pojo.RestResponse;
+import com.example.SERVER.util.exception.custom.EmailRegisteredException;
 import com.example.SERVER.util.exception.custom.IdInvalidException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,5 +45,14 @@ public class GlobalExceptionHandler {
         res.setMessage(errors.size() > 1 ? errors : errors.get(0));
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+    }
+    
+    @ExceptionHandler(EmailRegisteredException.class)
+    public ResponseEntity<RestResponse<Object>> handleEmailRegisteredException(EmailRegisteredException e){
+        RestResponse<Object> restResponse = new RestResponse<>();
+        restResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        restResponse.setError(e.getMessage());
+        restResponse.setMessage("Email đã được sử dụng cho tài khoản khác");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(restResponse);
     }
 }

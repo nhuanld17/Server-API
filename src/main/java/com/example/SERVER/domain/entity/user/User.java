@@ -2,11 +2,14 @@ package com.example.SERVER.domain.entity.user;
 
 import com.example.SERVER.domain.entity.candidate.Candidate;
 import com.example.SERVER.domain.entity.company.Company;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -26,9 +29,12 @@ public class User {
 
 	@Column(name = "password")
 	private String password;
+	
+	@Column(columnDefinition = "MEDIUMTEXT")
+	private String refreshToken;
 
 	@Column(name = "create_at", updatable = false)
-	private LocalDate createAt;
+	private Instant createAt;
 
 	@ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JoinTable(
@@ -39,14 +45,14 @@ public class User {
 	private Set<Role> roles;
 
 	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-	private Candidate candidate;
+	@JsonManagedReference // Tránh lỗi vòng lặp vô hạn khi trả ra JSON
+	private Candidate candidate; // @JsonManagedReference phải để ở bảng cha
 
 	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private Company company;
 
-	public User(String email, String password) {
-		this.email = email;
-		this.password = password;
-		this.createAt = LocalDate.now();
+	@PrePersist
+	public void handleBeforePersist() {
+		this.createAt = Instant.now();
 	}
 }
