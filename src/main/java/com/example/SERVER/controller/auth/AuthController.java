@@ -1,12 +1,10 @@
 package com.example.SERVER.controller.auth;
 
-import com.example.SERVER.domain.dto.user.LoginDTO;
-import com.example.SERVER.domain.dto.user.ResLoginDTO;
-import com.example.SERVER.domain.dto.user.ResRegisterDTO;
-import com.example.SERVER.domain.dto.user.CandidateRegisterDTO;
+import com.example.SERVER.domain.dto.user.*;
 import com.example.SERVER.domain.entity.candidate.Candidate;
 import com.example.SERVER.domain.entity.user.Role;
 import com.example.SERVER.domain.entity.user.User;
+import com.example.SERVER.service.role.RoleService;
 import com.example.SERVER.service.user.UserService;
 import com.example.SERVER.util.SecurityUtil;
 import com.example.SERVER.util.exception.custom.EmailRegisteredException;
@@ -30,16 +28,19 @@ public class AuthController {
 	private final AuthenticationManagerBuilder authenticationManagerBuilder;
 	private final UserService userService;
 	private final SecurityUtil securityUtil;
+	private final RoleService roleService;
 	
 	@Value("${jwt.refresh-token-validity-in-seconds}")
 	private long refreshTokenExpiration;
 	
 	public AuthController(AuthenticationManagerBuilder authenticationManagerBuilder,
 	                      UserService userService,
-	                      SecurityUtil securityUtil) {
+	                      SecurityUtil securityUtil,
+	                      RoleService roleService) {
 		this.authenticationManagerBuilder = authenticationManagerBuilder;
 		this.userService = userService;
 		this.securityUtil = securityUtil;
+		this.roleService = roleService;
 	}
 	
 	@PostMapping("/auth/login")
@@ -101,43 +102,80 @@ public class AuthController {
 				.body(resLoginDTO);
 	}
 	
-	@PostMapping("/auth/register-candidate")
-	public ResponseEntity<ResRegisterDTO> register(@RequestBody CandidateRegisterDTO candidateRegisterDTO) throws EmailRegisteredException {
-		
-		// Kiểm tra email đã được đăng kí tài khoản hay chưa
-		User user = this.userService.handleGetUserByUsername(candidateRegisterDTO.getEmail());
-		
+//	@PostMapping("/auth/register-candidate")
+//	public ResponseEntity<ResRegisterDTO> register(@RequestBody CandidateRegisterDTO candidateRegisterDTO) throws EmailRegisteredException {
+//
+//		// Kiểm tra email đã được đăng kí tài khoản hay chưa
+//		User user = this.userService.handleGetUserByUsername(candidateRegisterDTO.getEmail());
+//
+//		if (user != null) {
+//			throw new EmailRegisteredException("Email này đã được sử dụng");
+//		}
+//
+//		User registerUser = new User();
+//		registerUser.setEmail(candidateRegisterDTO.getEmail());
+//		registerUser.setPassword(candidateRegisterDTO.getPassword());
+//
+//		// Set role
+//		Role role = new Role();
+//		role.setRoleName("ROLE_CANDIDATE");
+//		registerUser.setRoles(Set.of(role));
+//
+//		Candidate candidate = new Candidate();
+//		candidate.setFirstName(candidateRegisterDTO.getFirstName());
+//		candidate.setLastName(candidateRegisterDTO.getLastName());
+//
+//		// Liên kết user với candidate
+//		registerUser.setCandidate(candidate);
+//		// Liên kết candidate với user
+//		candidate.setUser(registerUser);
+//		this.userService.handleRegisterUser(registerUser);
+//
+//		// Tạo ResRegisterDTO trả về JSON
+//		ResRegisterDTO resRegisterDTO = new ResRegisterDTO();
+//		resRegisterDTO.setFirstname(candidateRegisterDTO.getFirstName());
+//		resRegisterDTO.setLastname(candidateRegisterDTO.getLastName());
+//		resRegisterDTO.setEmail(candidateRegisterDTO.getEmail());
+//		resRegisterDTO.setRolename(role.getRoleName());
+//
+//	    return ResponseEntity.status(HttpStatus.CREATED).body(resRegisterDTO);
+//	}
+	
+	@PostMapping("/auth/register")
+	public ResponseEntity<ResRegisterDTO> register(@RequestBody RegisterDTO registerDTO) throws EmailRegisteredException {
+		User user = this.userService.handleGetUserByUsername(registerDTO.getEmail());
+
 		if (user != null) {
-			throw new EmailRegisteredException("Email này đã được sử dụng");
+			throw new EmailRegisteredException("Email đã được đăng kí");
 		}
-		
+
 		User registerUser = new User();
-		registerUser.setEmail(candidateRegisterDTO.getEmail());
-		registerUser.setPassword(candidateRegisterDTO.getPassword());
-		
-		// Set role
-		Role role = new Role();
-		role.setRoleName("ROLE_USER");
+		registerUser.setEmail(registerDTO.getEmail());
+		registerUser.setPassword(registerDTO.getPassword());
+
+		// Set role cho user
+		Role role = this.roleService.getRoleByName(registerDTO.getRole());
 		registerUser.setRoles(Set.of(role));
 		
+		// Liên kết user với candidate và ngược lại
 		Candidate candidate = new Candidate();
-		candidate.setFirstName(candidateRegisterDTO.getFirstName());
-		candidate.setLastName(candidateRegisterDTO.getLastName());
+		candidate.setFirstName(registerDTO.getFirstName());
+		candidate.setLastName(registerDTO.getLastName());
 		
-		// Liên kết user với candidate
 		registerUser.setCandidate(candidate);
-		// Liên kết candidate với user
 		candidate.setUser(registerUser);
+		
+		// Lưu user
 		this.userService.handleRegisterUser(registerUser);
 		
 		// Tạo ResRegisterDTO trả về JSON
 		ResRegisterDTO resRegisterDTO = new ResRegisterDTO();
-		resRegisterDTO.setFirstname(candidateRegisterDTO.getFirstName());
-		resRegisterDTO.setLastname(candidateRegisterDTO.getLastName());
-		resRegisterDTO.setEmail(candidateRegisterDTO.getEmail());
+		resRegisterDTO.setFirstname(registerDTO.getFirstName());
+		resRegisterDTO.setLastname(registerDTO.getLastName());
+		resRegisterDTO.setEmail(registerDTO.getEmail());
 		resRegisterDTO.setRolename(role.getRoleName());
 		
-	    return ResponseEntity.status(HttpStatus.CREATED).body(resRegisterDTO);
+		return ResponseEntity.status(HttpStatus.CREATED).body(resRegisterDTO);
 	}
 	
 	@GetMapping("/auth/account")

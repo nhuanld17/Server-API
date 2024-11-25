@@ -40,8 +40,7 @@ public class SecurityConfiguration {
 	private String[] publicEndpoint = {
 			"/",
 			"/auth/login",
-			"/auth/register",
-			"/auth/register-candidate"
+			"/auth/register"
 	};
 	
 	@Bean
