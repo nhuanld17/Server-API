@@ -1,5 +1,6 @@
 package com.example.SERVER.domain.entity.company;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -58,6 +59,7 @@ public class Job {
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL)
     private List<Application> applications;
 
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
