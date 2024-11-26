@@ -1,6 +1,7 @@
 package com.example.SERVER.domain.entity.company;
 
 import com.example.SERVER.domain.entity.user.User;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -38,7 +39,8 @@ public class Company {
     @OneToOne(mappedBy = "company", cascade = CascadeType.ALL,
             fetch = FetchType.LAZY, orphanRemoval = true)
     private CompanyDetail companyDetail;
-
+    
+    @JsonManagedReference
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL,
             fetch = FetchType.LAZY, orphanRemoval = true)
     private List<Job> jobs;

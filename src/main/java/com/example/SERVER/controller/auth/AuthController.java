@@ -129,12 +129,11 @@ public class AuthController {
 			Candidate candidate = new Candidate();
 			CandidateDetail candidateDetail = new CandidateDetail();
 			candidate.setFullName(registerDTO.getFullName());
-			
+
 			registerUser.setCandidate(candidate);
 			candidate.setUser(registerUser);
 			candidateDetail.setCandidate(candidate);
 			candidate.setCandidateDetail(candidateDetail);
-			
 			// Lưu user
 			this.userService.handleRegisterUser(registerUser);
 		} else if (registerDTO.getRole().equals("ROLE_COMPANY")) {
@@ -147,7 +146,7 @@ public class AuthController {
 			company.setUser(registerUser);
 			this.userService.handleRegisterUser(registerUser);
 		}
-		
+
 		// Tạo ResRegisterDTO trả về JSON
 		ResRegisterDTO resRegisterDTO = new ResRegisterDTO();
 		resRegisterDTO.setFullName(registerDTO.getFullName());
@@ -169,6 +168,7 @@ public class AuthController {
 			// Phần thêm thông tin người dùng đã đăng nhập vào resLoginDTO
 			userLogin.setId(currentUserDB.getId());
 			userLogin.setEmail(currentUserDB.getEmail());
+			userLogin.setRoleName(roleService.getRoleNameByUserName(currentUserDB.getEmail()));
 		}
 		
 		return ResponseEntity.ok(userLogin);
@@ -202,7 +202,7 @@ public class AuthController {
 			ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin(
 					currentUserDB.getId(),
 					currentUserDB.getEmail(),
-					currentUserDB.getRoles().toString()
+					roleService.getRoleNameByUserName(currentUserDB.getEmail())
 			);
 			
 			resLoginDTO.setUserLogin(userLogin);

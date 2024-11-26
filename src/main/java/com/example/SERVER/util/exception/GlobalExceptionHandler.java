@@ -5,6 +5,7 @@ import com.example.SERVER.util.exception.custom.EmailRegisteredException;
 import com.example.SERVER.util.exception.custom.IdInvalidException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindingResult;
@@ -54,5 +55,15 @@ public class GlobalExceptionHandler {
         restResponse.setError(e.getMessage());
         restResponse.setMessage("Email đã được sử dụng cho tài khoản khác");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(restResponse);
+    }
+    
+    // Xử lí khi thực hiện 1 REQUEST nhưng role không hợp lệ
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<RestResponse<Object>> handleAccessDeniedException(AccessDeniedException e){
+        RestResponse<Object> restResponse = new RestResponse<>();
+        restResponse.setStatusCode(HttpStatus.FORBIDDEN.value());
+        restResponse.setError(e.getMessage());
+        restResponse.setMessage("Access denied");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(restResponse);
     }
 }
