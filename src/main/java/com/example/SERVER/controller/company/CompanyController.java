@@ -1,9 +1,13 @@
 package com.example.SERVER.controller.company;
 
-import com.example.SERVER.domain.dto.company.CompanyInfoDTO;
+import com.example.SERVER.controller.common.CloudinaryImageUploadController;
+import com.example.SERVER.domain.dto.company.CompanyInfoUpdateDTO;
+import com.example.SERVER.domain.dto.company.ResCompanyInfoDTO;
 import com.example.SERVER.domain.entity.company.Company;
+import com.example.SERVER.domain.entity.company.CompanyDetail;
 import com.example.SERVER.domain.entity.company.Job;
 import com.example.SERVER.domain.entity.user.User;
+import com.example.SERVER.service.company.CloudinaryService;
 import com.example.SERVER.service.company.CompanyService;
 import com.example.SERVER.service.job.JobService;
 import com.example.SERVER.service.user.UserService;
@@ -14,9 +18,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/company")
@@ -25,13 +31,15 @@ public class CompanyController {
 	private final UserService userService;
 	private final JobService jobService;
 	private final CompanyService companyService;
+	private final CloudinaryService cloudinaryService;
 	
 	public CompanyController(
 			UserService userService, JobService jobService,
-			CompanyService companyService) {
+			CompanyService companyService, CloudinaryService cloudinaryService) {
 		this.userService = userService;
 		this.jobService = jobService;
 		this.companyService = companyService;
+		this.cloudinaryService = cloudinaryService;
 	}
 	
 	@PreAuthorize("hasRole('ROLE_COMPANY')")
@@ -150,16 +158,62 @@ public class CompanyController {
 	
 	@PreAuthorize("hasRole('ROLE_COMPANY')")
 	@GetMapping("/info")
-	public ResponseEntity<CompanyInfoDTO> getCompanyInfo() {
+	public ResponseEntity<ResCompanyInfoDTO> getCompanyInfo() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
 		
 		Company company = currentUser.getCompany();
-		CompanyInfoDTO companyInfoDTO = new CompanyInfoDTO();
+		ResCompanyInfoDTO companyInfoDTO = new ResCompanyInfoDTO();
 		companyInfoDTO.setCompanyName(company.getCompanyName());
 		companyInfoDTO.setImgLink(company.getCompanyDetail().getProfilePictureLink());
 		companyInfoDTO.setAboutUs(company.getCompanyDetail().getAboutUs());
 		
 		return ResponseEntity.status(HttpStatus.OK).body(companyInfoDTO);
 	}
+	
+	@PreAuthorize("hasRole('ROLE_COMPANY')")
+	@PutMapping("/update-info")
+	public ResponseEntity<ResCompanyInfoDTO> updateCompanyInfo(
+			@RequestParam("companyName") String companyName,
+			@RequestParam("aboutUs") String aboutUs,
+			@RequestParam("imageFile") MultipartFile imageFile) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
+		
+		Company company = currentUser.getCompany();
+		CompanyDetail companyDetail = company.getCompanyDetail();
+		
+		company.setCompanyName(companyName);
+		companyDetail.setAboutUs(aboutUs);
+		
+		// Nếu ảnh không được cập nhật, thì lấy lại link cũ
+		if (imageFile == null || imageFile.isEmpty()) {
+			companyDetail.setProfilePictureLink(company.getCompanyDetail().getProfilePictureLink());
+		} else {
+			// Nếu thay đôi ảnh, xóa ảnh cũ ở cloud và upload lên cloud ảnh mới
+			// Xóa ảnh cũ nếu có
+			String oldImageUrl = company.getCompanyDetail().getProfilePictureLink();
+			if (oldImageUrl != null && !oldImageUrl.isEmpty()) {
+				this.cloudinaryService.delete(oldImageUrl, "CompanyAvatar");
+			}
+			
+			Map data = this.cloudinaryService.upload(imageFile, "CompanyAvatar");
+			String pictureProfileLink = (String) data.get("secure_url");
+			companyDetail.setProfilePictureLink(pictureProfileLink);
+		}
+		
+		// Lưu lại
+		company.setCompanyDetail(companyDetail);
+		companyService.saveCompany(company);
+		
+		// Tạo ResCompanyInfoDTO để trả về lại thông tin đã cập nhật
+		// để front end set lại giá trị của các ô input
+		ResCompanyInfoDTO companyInfoDTO = new ResCompanyInfoDTO();
+		companyInfoDTO.setCompanyName(company.getCompanyName());
+		companyInfoDTO.setAboutUs(company.getCompanyDetail().getAboutUs());
+		companyInfoDTO.setImgLink(company.getCompanyDetail().getProfilePictureLink());
+		
+		return ResponseEntity.status(HttpStatus.OK).body(companyInfoDTO);
+	}
+	
 }
