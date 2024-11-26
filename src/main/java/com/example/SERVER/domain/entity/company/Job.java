@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
@@ -54,7 +55,7 @@ public class Job {
     private String responesibility;
 
     @Column(name = "post_at")
-    private String postAt;
+    private Instant postAt;
 
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL)
     private List<Application> applications;
@@ -63,4 +64,9 @@ public class Job {
     @ManyToOne
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
+    
+    @PrePersist
+    protected void handleBeforePersists() {
+        postAt = Instant.now();
+    }
 }
