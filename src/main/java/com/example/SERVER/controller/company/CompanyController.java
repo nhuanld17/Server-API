@@ -5,6 +5,7 @@ import com.example.SERVER.domain.entity.company.Job;
 import com.example.SERVER.domain.entity.user.User;
 import com.example.SERVER.service.job.JobService;
 import com.example.SERVER.service.user.UserService;
+import com.example.SERVER.util.exception.custom.JobNotExistException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -67,5 +68,21 @@ public class CompanyController {
 		List<Job> jobs = company.getJobs();
 		
 		return ResponseEntity.status(HttpStatus.OK).body(jobs);
+	}
+	
+	@PreAuthorize("hasRole('ROLE_COMPANY')")
+	@GetMapping("/job/{id}")
+	public ResponseEntity<Job> getJobById(@PathVariable long id) throws JobNotExistException {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
+		
+		Company company = currentUser.getCompany();
+		Job job = company.getJobs().stream().filter(j -> j.getId() == id).findFirst().orElse(null);
+		
+		if (job == null) {
+			throw new JobNotExistException("Bài đăng không tồn tại");
+		}
+		
+		return ResponseEntity.status(HttpStatus.OK).body(job);
 	}
 }
