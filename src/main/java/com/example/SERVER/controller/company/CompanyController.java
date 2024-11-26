@@ -1,5 +1,6 @@
 package com.example.SERVER.controller.company;
 
+import com.example.SERVER.domain.dto.company.CompanyInfoDTO;
 import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.domain.entity.company.Job;
 import com.example.SERVER.domain.entity.user.User;
@@ -145,5 +146,20 @@ public class CompanyController {
 		// Hoặc: this.jobRepository.delete(job); // Xóa trực tiếp từ JobRepository
 		
 		return ResponseEntity.status(HttpStatus.OK).body(job);
+	}
+	
+	@PreAuthorize("hasRole('ROLE_COMPANY')")
+	@GetMapping("/info")
+	public ResponseEntity<CompanyInfoDTO> getCompanyInfo() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
+		
+		Company company = currentUser.getCompany();
+		CompanyInfoDTO companyInfoDTO = new CompanyInfoDTO();
+		companyInfoDTO.setCompanyName(company.getCompanyName());
+		companyInfoDTO.setImgLink(company.getCompanyDetail().getProfilePictureLink());
+		companyInfoDTO.setAboutUs(company.getCompanyDetail().getAboutUs());
+		
+		return ResponseEntity.status(HttpStatus.OK).body(companyInfoDTO);
 	}
 }
