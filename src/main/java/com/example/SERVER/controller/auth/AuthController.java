@@ -2,6 +2,9 @@ package com.example.SERVER.controller.auth;
 
 import com.example.SERVER.domain.dto.user.*;
 import com.example.SERVER.domain.entity.candidate.Candidate;
+import com.example.SERVER.domain.entity.candidate.CandidateDetail;
+import com.example.SERVER.domain.entity.company.Company;
+import com.example.SERVER.domain.entity.company.CompanyDetail;
 import com.example.SERVER.domain.entity.user.Role;
 import com.example.SERVER.domain.entity.user.User;
 import com.example.SERVER.service.role.RoleService;
@@ -120,16 +123,30 @@ public class AuthController {
 		// Set role cho user
 		Role role = this.roleService.getRoleByName(registerDTO.getRole());
 		registerUser.setRoles(Set.of(role));
-		
-		// Liên kết user với candidate và ngược lại
-		Candidate candidate = new Candidate();
-		candidate.setFullName(registerDTO.getFullName());
-		
-		registerUser.setCandidate(candidate);
-		candidate.setUser(registerUser);
-		
-		// Lưu user
-		this.userService.handleRegisterUser(registerUser);
+
+		if (registerDTO.getRole().equals("ROLE_CANDIDATE")) {
+			// Liên kết user với candidate và ngược lại
+			Candidate candidate = new Candidate();
+			CandidateDetail candidateDetail = new CandidateDetail();
+			candidate.setFullName(registerDTO.getFullName());
+			
+			registerUser.setCandidate(candidate);
+			candidate.setUser(registerUser);
+			candidateDetail.setCandidate(candidate);
+			candidate.setCandidateDetail(candidateDetail);
+			
+			// Lưu user
+			this.userService.handleRegisterUser(registerUser);
+		} else if (registerDTO.getRole().equals("ROLE_COMPANY")) {
+			Company company = new Company();
+			CompanyDetail companyDetail = new CompanyDetail();
+			company.setCompanyName(registerDTO.getFullName());
+			registerUser.setCompany(company);
+			companyDetail.setCompany(company);
+			company.setCompanyDetail(companyDetail);
+			company.setUser(registerUser);
+			this.userService.handleRegisterUser(registerUser);
+		}
 		
 		// Tạo ResRegisterDTO trả về JSON
 		ResRegisterDTO resRegisterDTO = new ResRegisterDTO();
