@@ -3,6 +3,7 @@ package com.example.SERVER.controller.company;
 import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.domain.entity.company.Job;
 import com.example.SERVER.domain.entity.user.User;
+import com.example.SERVER.service.company.CompanyService;
 import com.example.SERVER.service.job.JobService;
 import com.example.SERVER.service.user.UserService;
 import com.example.SERVER.util.exception.custom.JobNotExistException;
@@ -22,10 +23,14 @@ public class CompanyController {
 	
 	private final UserService userService;
 	private final JobService jobService;
+	private final CompanyService companyService;
 	
-	public CompanyController(UserService userService, JobService jobService) {
+	public CompanyController(
+			UserService userService, JobService jobService,
+			CompanyService companyService) {
 		this.userService = userService;
 		this.jobService = jobService;
+		this.companyService = companyService;
 	}
 	
 	@PreAuthorize("hasRole('ROLE_COMPANY')")
@@ -82,6 +87,29 @@ public class CompanyController {
 		if (job == null) {
 			throw new JobNotExistException("Bài đăng không tồn tại");
 		}
+		
+		return ResponseEntity.status(HttpStatus.OK).body(job);
+	}
+	
+	@PreAuthorize("hasRole('ROLE_COMPANY')")
+	@DeleteMapping("/job/{id}")
+	public ResponseEntity<Job> deleteJob(@PathVariable long id) throws JobNotExistException {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
+		
+		Company company = currentUser.getCompany();
+		Job job = company.getJobs().stream().filter(j -> j.getId() == id).findFirst().orElse(null);
+		
+		if (job == null) {
+			throw new JobNotExistException("Job không tồn tại hoặc đã bị xóa trước đó");
+		}
+		
+		// Xóa job khỏi danh sách job của company
+		company.getJobs().remove(job);
+		
+		// Lưu lại công ty
+		this.companyService.saveCompany(company);
+		// Hoặc: this.jobRepository.delete(job); // Xóa trực tiếp từ JobRepository
 		
 		return ResponseEntity.status(HttpStatus.OK).body(job);
 	}
