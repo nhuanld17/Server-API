@@ -2,6 +2,7 @@ package com.example.SERVER.domain.entity.candidate;
 
 import com.example.SERVER.domain.entity.company.Application;
 import com.example.SERVER.domain.entity.user.User;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -32,6 +33,7 @@ public class Candidate {
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @JsonBackReference
     private User user;
 
     @OneToOne(mappedBy = "candidate", cascade = CascadeType.ALL,
