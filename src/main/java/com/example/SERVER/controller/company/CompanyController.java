@@ -92,6 +92,39 @@ public class CompanyController {
 	}
 	
 	@PreAuthorize("hasRole('ROLE_COMPANY')")
+	@PutMapping("/job/{id}")
+	public ResponseEntity<Job> updateJob(@PathVariable long id, @RequestBody Job job) throws JobNotExistException {
+		// Lấy thông tin người dùng hiện tại từ SecurityContext
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		User currentUser = userService.handleGetUserByUsername(authentication.getName());
+		
+		// Lấy thông tin của người dùng
+		Company company = currentUser.getCompany();
+		
+		// Tìm kiếm job trong danh sách công ty
+		Job existingJob = company.getJobs()
+				.stream()
+				.filter(j -> j.getId() == id).findFirst().orElseThrow(() -> new JobNotExistException("Job không tồn tại"));
+		
+		existingJob.setTitle(job.getTitle());
+		existingJob.setTags(job.getTags());
+		existingJob.setMaxSalary(job.getMaxSalary());
+		existingJob.setEducation(job.getEducation());
+		existingJob.setExperience(job.getExperience());
+		existingJob.setJobType(job.getJobType());
+		existingJob.setJobRole(job.getJobRole());
+		existingJob.setExpirationDate(job.getExpirationDate());
+		existingJob.setJobLevel(job.getJobLevel());
+		existingJob.setDescription(job.getDescription());
+		existingJob.setResponesibility(job.getResponesibility());
+		
+		// Lưu lại công ty với job đã cập nhật
+		companyService.saveCompany(company);
+		
+		return ResponseEntity.status(HttpStatus.OK).body(existingJob);
+	}
+	
+	@PreAuthorize("hasRole('ROLE_COMPANY')")
 	@DeleteMapping("/job/{id}")
 	public ResponseEntity<Job> deleteJob(@PathVariable long id) throws JobNotExistException {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
