@@ -1,7 +1,6 @@
 package com.example.SERVER.controller.company;
 
-import com.example.SERVER.controller.common.CloudinaryImageUploadController;
-import com.example.SERVER.domain.dto.company.CompanyInfoUpdateDTO;
+import com.example.SERVER.domain.dto.company.FoundingInfoDTO;
 import com.example.SERVER.domain.dto.company.ResCompanyInfoDTO;
 import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.domain.entity.company.CompanyDetail;
@@ -171,49 +170,117 @@ public class CompanyController {
 		return ResponseEntity.status(HttpStatus.OK).body(companyInfoDTO);
 	}
 	
+//	@PreAuthorize("hasRole('ROLE_COMPANY')")
+//	@PutMapping("/update-info")
+//	public ResponseEntity<ResCompanyInfoDTO> updateCompanyInfo(
+//			@RequestParam("companyName") String companyName,
+//			@RequestParam("aboutUs") String aboutUs,
+//			@RequestParam("imageFile") MultipartFile imageFile) {
+//		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
+//
+//		Company company = currentUser.getCompany();
+//		CompanyDetail companyDetail = company.getCompanyDetail();
+//
+//		company.setCompanyName(companyName);
+//		companyDetail.setAboutUs(aboutUs);
+//
+//		// Nếu ảnh không được cập nhật, thì lấy lại link cũ
+//		if (imageFile == null || imageFile.isEmpty()) {
+//			companyDetail.setProfilePictureLink(company.getCompanyDetail().getProfilePictureLink());
+//		} else {
+//			// Nếu thay đôi ảnh, xóa ảnh cũ ở cloud và upload lên cloud ảnh mới
+//			// Xóa ảnh cũ nếu có
+//			String oldImageUrl = company.getCompanyDetail().getProfilePictureLink();
+//			if (oldImageUrl != null && !oldImageUrl.isEmpty()) {
+//				this.cloudinaryService.delete(oldImageUrl, "CompanyAvatar");
+//			}
+//
+//			Map data = this.cloudinaryService.upload(imageFile, "CompanyAvatar");
+//			String pictureProfileLink = (String) data.get("secure_url");
+//			companyDetail.setProfilePictureLink(pictureProfileLink);
+//		}
+//
+//		// Lưu lại
+//		company.setCompanyDetail(companyDetail);
+//		companyService.saveCompany(company);
+//
+//		// Tạo ResCompanyInfoDTO để trả về lại thông tin đã cập nhật
+//		// để front end set lại giá trị của các ô input
+//		ResCompanyInfoDTO companyInfoDTO = new ResCompanyInfoDTO();
+//		companyInfoDTO.setCompanyName(company.getCompanyName());
+//		companyInfoDTO.setAboutUs(company.getCompanyDetail().getAboutUs());
+//		companyInfoDTO.setImgLink(company.getCompanyDetail().getProfilePictureLink());
+//
+//		return ResponseEntity.status(HttpStatus.OK).body(companyInfoDTO);
+//	}
+	
+	// Dành cho tab Company info
 	@PreAuthorize("hasRole('ROLE_COMPANY')")
 	@PutMapping("/update-info")
-	public ResponseEntity<ResCompanyInfoDTO> updateCompanyInfo(
-			@RequestParam("companyName") String companyName,
-			@RequestParam("aboutUs") String aboutUs,
-			@RequestParam("imageFile") MultipartFile imageFile) {
+	public ResponseEntity<ResCompanyInfoDTO> updateCompanyInfo(@RequestBody ResCompanyInfoDTO companyInfoDTO) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
 		
 		Company company = currentUser.getCompany();
 		CompanyDetail companyDetail = company.getCompanyDetail();
 		
-		company.setCompanyName(companyName);
-		companyDetail.setAboutUs(aboutUs);
+		company.setCompanyName(companyInfoDTO.getCompanyName());
+		companyDetail.setAboutUs(companyInfoDTO.getAboutUs());
 		
-		// Nếu ảnh không được cập nhật, thì lấy lại link cũ
-		if (imageFile == null || imageFile.isEmpty()) {
-			companyDetail.setProfilePictureLink(company.getCompanyDetail().getProfilePictureLink());
+		if (companyInfoDTO.getImgLink() == null) {
+			companyDetail.setProfilePictureLink(companyDetail.getProfilePictureLink());
 		} else {
-			// Nếu thay đôi ảnh, xóa ảnh cũ ở cloud và upload lên cloud ảnh mới
-			// Xóa ảnh cũ nếu có
-			String oldImageUrl = company.getCompanyDetail().getProfilePictureLink();
-			if (oldImageUrl != null && !oldImageUrl.isEmpty()) {
-				this.cloudinaryService.delete(oldImageUrl, "CompanyAvatar");
-			}
-			
-			Map data = this.cloudinaryService.upload(imageFile, "CompanyAvatar");
-			String pictureProfileLink = (String) data.get("secure_url");
-			companyDetail.setProfilePictureLink(pictureProfileLink);
+			companyDetail.setProfilePictureLink(companyInfoDTO.getImgLink());
 		}
 		
-		// Lưu lại
 		company.setCompanyDetail(companyDetail);
-		companyService.saveCompany(company);
 		
-		// Tạo ResCompanyInfoDTO để trả về lại thông tin đã cập nhật
-		// để front end set lại giá trị của các ô input
-		ResCompanyInfoDTO companyInfoDTO = new ResCompanyInfoDTO();
-		companyInfoDTO.setCompanyName(company.getCompanyName());
-		companyInfoDTO.setAboutUs(company.getCompanyDetail().getAboutUs());
-		companyInfoDTO.setImgLink(company.getCompanyDetail().getProfilePictureLink());
+		companyService.saveCompany(company);
 		
 		return ResponseEntity.status(HttpStatus.OK).body(companyInfoDTO);
 	}
 	
+	// trả về thông tin cho tab founding info
+	@PreAuthorize("hasRole('ROLE_COMPANY')")
+	@GetMapping("/founding-info")
+	public ResponseEntity<FoundingInfoDTO> getFoundingInfo() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
+		
+		Company company = currentUser.getCompany();
+		CompanyDetail companyDetail = company.getCompanyDetail();
+		
+		// Thêm thông tin vào FoudingInfoDTO để trả về dữ liệu
+		FoundingInfoDTO foundingInfoDTO = new FoundingInfoDTO();
+		foundingInfoDTO.setTeamSize(companyDetail.getTeamSize());
+		foundingInfoDTO.setCompanyWebSite(company.getWebsite());
+		foundingInfoDTO.setIndustryType(companyDetail.getIndustryType());
+		foundingInfoDTO.setYearOfEstablishment(companyDetail.getDateEstablished());
+		
+		
+		return ResponseEntity.ok().body(foundingInfoDTO);
+	}
+	
+	// Cập nhật thông tin ở tab founding info
+	@PreAuthorize("hasRole('ROLE_COMPANY')")
+	@PutMapping("/update-founding-info")
+	public ResponseEntity<FoundingInfoDTO> updateFoundingInfo(@RequestBody FoundingInfoDTO foundingInfoDTO) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
+		
+		Company company = currentUser.getCompany();
+		CompanyDetail companyDetail = company.getCompanyDetail();
+		
+		companyDetail.setIndustryType(foundingInfoDTO.getIndustryType());
+		companyDetail.setTeamSize(foundingInfoDTO.getTeamSize());
+		companyDetail.setDateEstablished(foundingInfoDTO.getYearOfEstablishment());
+		company.setWebsite(foundingInfoDTO.getCompanyWebSite());
+		
+		company.setCompanyDetail(companyDetail);
+		
+		companyService.saveCompany(company);
+		
+		return ResponseEntity.status(HttpStatus.OK).body(foundingInfoDTO);
+	}
 }
