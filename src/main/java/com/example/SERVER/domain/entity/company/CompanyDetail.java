@@ -29,6 +29,9 @@ public class CompanyDetail {
 
     @Column(name = "date_established")
     private Date dateEstablished;
+    
+    @Column(name = "location")
+    private String location;
 
     @Column(name = "about_us")
     private String aboutUs;

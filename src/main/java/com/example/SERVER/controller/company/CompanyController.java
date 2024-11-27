@@ -1,5 +1,6 @@
 package com.example.SERVER.controller.company;
 
+import com.example.SERVER.domain.dto.company.ContactInfoDTO;
 import com.example.SERVER.domain.dto.company.FoundingInfoDTO;
 import com.example.SERVER.domain.dto.company.ResCompanyInfoDTO;
 import com.example.SERVER.domain.entity.company.Company;
@@ -282,5 +283,42 @@ public class CompanyController {
 		companyService.saveCompany(company);
 		
 		return ResponseEntity.status(HttpStatus.OK).body(foundingInfoDTO);
+	}
+	
+	// Get thông tin liên hệ ở tab Account setting
+	@PreAuthorize("hasRole('ROLE_COMPANY')")
+	@GetMapping("/contact-info")
+	public ResponseEntity<ContactInfoDTO> getContactInfo() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
+		
+		Company company = currentUser.getCompany();
+		CompanyDetail companyDetail = company.getCompanyDetail();
+		
+		ContactInfoDTO contactInfoDTO = new ContactInfoDTO();
+		contactInfoDTO.setEmail(company.getEmail());
+		contactInfoDTO.setLocation(companyDetail.getLocation());
+		contactInfoDTO.setPhoneNumber(company.getPhone());
+		
+		return ResponseEntity.ok().body(contactInfoDTO);
+	}
+	
+	@PreAuthorize("hasRole('ROLE_COMPANY')")
+	@PutMapping("/update-contact-info")
+	public ResponseEntity<ContactInfoDTO> updateContactInfo(@RequestBody ContactInfoDTO contactInfoDTO) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
+		
+		Company company = currentUser.getCompany();
+		CompanyDetail companyDetail = company.getCompanyDetail();
+		
+		company.setEmail(contactInfoDTO.getEmail());
+		companyDetail.setLocation(contactInfoDTO.getLocation());
+		company.setPhone(contactInfoDTO.getPhoneNumber());
+		
+		company.setCompanyDetail(companyDetail);
+		this.companyService.saveCompany(company);
+		
+		return ResponseEntity.ok().body(contactInfoDTO);
 	}
 }
