@@ -129,13 +129,15 @@ public class AuthController {
 		// Set role cho user
 		Role role = this.roleService.getRoleByName(registerDTO.getRole());
 		registerUser.setRoles(Set.of(role));
-		
+
 		if (registerDTO.getRole().equals("ROLE_CANDIDATE")) {
 			//=== Tạo các thực thể con của user và liên kết lại
 			
 			// Tạo candidate và liên kết với user
 			Candidate candidate = new Candidate();
+			CandidateDetail candidateDetail = new CandidateDetail();
 			candidate.setFullName(registerDTO.getFullName());
+
 			registerUser.setCandidate(candidate);
 			
 			
@@ -155,7 +157,8 @@ public class AuthController {
 			candidate.setCandidateWishList(candidateWishList);
 			
 			candidate.setUser(registerUser);
-			
+			candidateDetail.setCandidate(candidate);
+			candidate.setCandidateDetail(candidateDetail);
 			// Lưu user
 			this.userService.handleRegisterUser(registerUser);
 		} else if (registerDTO.getRole().equals("ROLE_COMPANY")) {
@@ -163,8 +166,11 @@ public class AuthController {
 			
 			// Liên kết company với user
 			Company company = new Company();
+			CompanyDetail companyDetail = new CompanyDetail();
 			company.setCompanyName(registerDTO.getFullName());
 			registerUser.setCompany(company);
+			companyDetail.setCompany(company);
+			company.setCompanyDetail(companyDetail);
 			company.setUser(registerUser);
 			
 			// liên kết company với company detail
@@ -175,7 +181,7 @@ public class AuthController {
 			// Lưu user
 			this.userService.handleRegisterUser(registerUser);
 		}
-		
+
 		// Tạo ResRegisterDTO trả về JSON
 		ResRegisterDTO resRegisterDTO = new ResRegisterDTO();
 		resRegisterDTO.setFullName(registerDTO.getFullName());
