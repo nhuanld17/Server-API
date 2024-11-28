@@ -37,6 +37,10 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt
 	implementation("io.jsonwebtoken:jjwt:0.12.6")
+	// https://mvnrepository.com/artifact/com.cloudinary/cloudinary-http44
+	implementation("com.cloudinary:cloudinary-http44:1.39.0")
+	// Spring filter library
+	implementation("com.turkraft.springfilter:jpa:3.1.7")
 }
 
 tasks.withType<Test> {

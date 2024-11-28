@@ -1,5 +1,6 @@
 package com.example.SERVER.config;
 
+import com.cloudinary.Cloudinary;
 import com.example.SERVER.util.SecurityUtil;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.util.Base64;
@@ -30,6 +31,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +43,15 @@ public class SecurityConfiguration {
 	private final UserDetailsService userDetailsService;
 
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
+	
+	@Value("${cloudinary.cloud-name}")
+	private String cloud_name;
+	
+	@Value("${cloudinary.api-key}")
+	private String api_key;
+	
+	@Value("${cloudinary.api-secret}")
+	private String api_secret;
 
 	@Value("${secret-key}")
 	private String jwtKey;
@@ -48,12 +59,24 @@ public class SecurityConfiguration {
 	private String[] publicEndpoint = {
 			"/",
 			"/auth/login",
-			"/auth/register"
+			"/auth/register",
+			"/cloudinary/upload"
 	};
 	
 	@Bean
 	public PasswordEncoder passwordEncoder(){
 		return new BCryptPasswordEncoder();
+	}
+	
+	// Cấu hình Cloudinary
+	@Bean
+	public Cloudinary getCloudinary() {
+		Map config = new HashMap();
+		config.put("cloud_name", cloud_name);
+		config.put("api_key", api_key);
+		config.put("api_secret", api_secret);
+		config.put("secure", true);
+		return new Cloudinary(config);
 	}
 	
 	@Autowired

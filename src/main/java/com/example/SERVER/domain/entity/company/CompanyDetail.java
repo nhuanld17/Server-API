@@ -20,18 +20,24 @@ public class CompanyDetail {
 
     @Column(name = "description")
     private String description;
+    
+    @Column(name = "industry_type")
+    private String industryType;
 
     @Column(name = "profile_picture_link")
     private String profilePictureLink;
 
     @Column(name = "date_established")
     private Date dateEstablished;
+    
+    @Column(name = "location")
+    private String location;
 
     @Column(name = "about_us")
     private String aboutUs;
 
     @Column(name = "team_size")
-    private String teamSize;
+    private Integer teamSize;
 
     @OneToOne
     @JoinColumn(name = "company_id", nullable = false)

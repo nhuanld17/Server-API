@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Entity
 @Data
 @AllArgsConstructor
@@ -43,8 +45,8 @@ public class Candidate {
     @OneToOne(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
     private LinkSocial linkSocial;
 
-    @OneToOne(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Application application;
+    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Application> applications;
 
     @OneToOne(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
     private CandidateWishList candidateWishList;
