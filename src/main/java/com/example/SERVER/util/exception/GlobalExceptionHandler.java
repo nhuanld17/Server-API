@@ -3,6 +3,7 @@ package com.example.SERVER.util.exception;
 import com.example.SERVER.domain.pojo.RestResponse;
 import com.example.SERVER.util.exception.custom.EmailRegisteredException;
 import com.example.SERVER.util.exception.custom.IdInvalidException;
+import com.example.SERVER.util.exception.custom.JobNotExistException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -65,5 +66,15 @@ public class GlobalExceptionHandler {
         restResponse.setError(e.getMessage());
         restResponse.setMessage("Access denied");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(restResponse);
+    }
+    
+    // Xử lí ngoại lệ bài đăng không tồn tại
+    @ExceptionHandler(JobNotExistException.class)
+    public ResponseEntity<RestResponse<Object>> handleJobNotExistException(JobNotExistException e){
+        RestResponse<Object> restResponse = new RestResponse<>();
+        restResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        restResponse.setError(e.getMessage());
+        restResponse.setMessage("Bài đăng không tồn tại nhé");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(restResponse);
     }
 }

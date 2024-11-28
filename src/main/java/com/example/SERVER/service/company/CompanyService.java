@@ -3,6 +3,7 @@ package com.example.SERVER.service.company;
 import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.repository.company.CompanyRepository;
 import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
 
 import java.util.Optional;
 
@@ -17,4 +18,8 @@ public class CompanyService {
         return companyRepository.findById(id);
     }
 
+    @Transactional
+    public void saveCompany(Company company) {
+      companyRepository.save(company);
+    }
 }

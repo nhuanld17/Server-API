@@ -1,8 +1,13 @@
 package com.example.SERVER.controller.auth;
 
-import com.example.SERVER.domain.dto.user.*;
+import com.example.SERVER.domain.dto.user.LoginDTO;
+import com.example.SERVER.domain.dto.user.RegisterDTO;
+import com.example.SERVER.domain.dto.user.ResLoginDTO;
+import com.example.SERVER.domain.dto.user.ResRegisterDTO;
 import com.example.SERVER.domain.entity.candidate.Candidate;
 import com.example.SERVER.domain.entity.candidate.CandidateDetail;
+import com.example.SERVER.domain.entity.candidate.CandidateWishList;
+import com.example.SERVER.domain.entity.candidate.LinkSocial;
 import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.domain.entity.company.CompanyDetail;
 import com.example.SERVER.domain.entity.user.Role;
@@ -24,6 +29,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -125,18 +131,40 @@ public class AuthController {
 		registerUser.setRoles(Set.of(role));
 
 		if (registerDTO.getRole().equals("ROLE_CANDIDATE")) {
-			// Liên kết user với candidate và ngược lại
+			//=== Tạo các thực thể con của user và liên kết lại
+			
+			// Tạo candidate và liên kết với user
 			Candidate candidate = new Candidate();
 			CandidateDetail candidateDetail = new CandidateDetail();
 			candidate.setFullName(registerDTO.getFullName());
 
 			registerUser.setCandidate(candidate);
+			
+			
+			// Tạo candidateDetail và liên kết với candidate
+			CandidateDetail candidateDetail = new CandidateDetail();
+			candidateDetail.setCandidate(candidate);
+			candidate.setCandidateDetail(candidateDetail);
+			
+			// Tạo linkSocial và liên kết với candidate
+			LinkSocial linkSocial = new LinkSocial();
+			linkSocial.setCandidate(candidate);
+			candidate.setLinkSocial(linkSocial);
+			
+			// Tạo candidateWishList và liên kết với candidate
+			CandidateWishList candidateWishList = new CandidateWishList();
+			candidateWishList.setCandidate(candidate);
+			candidate.setCandidateWishList(candidateWishList);
+			
 			candidate.setUser(registerUser);
 			candidateDetail.setCandidate(candidate);
 			candidate.setCandidateDetail(candidateDetail);
 			// Lưu user
 			this.userService.handleRegisterUser(registerUser);
 		} else if (registerDTO.getRole().equals("ROLE_COMPANY")) {
+			//=== Tạo các thực thể con của user và liên kết lại
+			
+			// Liên kết company với user
 			Company company = new Company();
 			CompanyDetail companyDetail = new CompanyDetail();
 			company.setCompanyName(registerDTO.getFullName());
@@ -144,6 +172,13 @@ public class AuthController {
 			companyDetail.setCompany(company);
 			company.setCompanyDetail(companyDetail);
 			company.setUser(registerUser);
+			
+			// liên kết company với company detail
+			CompanyDetail companyDetail = new CompanyDetail();
+			companyDetail.setCompany(company);
+			company.setCompanyDetail(companyDetail);
+			
+			// Lưu user
 			this.userService.handleRegisterUser(registerUser);
 		}
 
