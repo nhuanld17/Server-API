@@ -135,10 +135,7 @@ public class AuthController {
 			
 			// Tạo candidate và liên kết với user
 			Candidate candidate = new Candidate();
-			CandidateDetail candidateDetail = new CandidateDetail();
 			candidate.setFullName(registerDTO.getFullName());
-
-			registerUser.setCandidate(candidate);
 			
 			
 			// Tạo candidateDetail và liên kết với candidate
@@ -157,26 +154,24 @@ public class AuthController {
 			candidate.setCandidateWishList(candidateWishList);
 			
 			candidate.setUser(registerUser);
-			candidateDetail.setCandidate(candidate);
-			candidate.setCandidateDetail(candidateDetail);
+			registerUser.setCandidate(candidate);
+			
 			// Lưu user
 			this.userService.handleRegisterUser(registerUser);
+			
 		} else if (registerDTO.getRole().equals("ROLE_COMPANY")) {
 			//=== Tạo các thực thể con của user và liên kết lại
 			
 			// Liên kết company với user
 			Company company = new Company();
-			CompanyDetail companyDetail = new CompanyDetail();
 			company.setCompanyName(registerDTO.getFullName());
-			registerUser.setCompany(company);
-			companyDetail.setCompany(company);
-			company.setCompanyDetail(companyDetail);
-			company.setUser(registerUser);
 			
-			// liên kết company với company detail
 			CompanyDetail companyDetail = new CompanyDetail();
 			companyDetail.setCompany(company);
 			company.setCompanyDetail(companyDetail);
+			
+			company.setUser(registerUser);
+			registerUser.setCompany(company);
 			
 			// Lưu user
 			this.userService.handleRegisterUser(registerUser);

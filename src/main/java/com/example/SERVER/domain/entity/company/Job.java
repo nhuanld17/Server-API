@@ -5,8 +5,13 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.springframework.cglib.core.Local;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
@@ -68,5 +73,33 @@ public class Job {
     @PrePersist
     protected void handleBeforePersists() {
         postAt = Instant.now();
+    }
+    
+    @Transient
+    private boolean isActive;
+    
+    // Hàm kiếm tra bài đăng còn hiệu lực hay không
+    public boolean isActive() {
+        return getDaysUntilExpiration() > 0 ? true : false;
+    }
+    
+    // Tính số ngày còn lại trước hạn ứng tuyển
+    public long getDaysUntilExpiration() {
+        
+        LocalDate currentDate = LocalDate.now();
+        LocalDate expirationLocalDate = expirationDate.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+        
+        return ChronoUnit.DAYS.between(currentDate, expirationLocalDate);
+    }
+    
+    // Lấy số đơn ứng tuyển của 1 job
+    public long getNumberOfApplications() {
+        if (applications == null) {
+            return 0;
+        }
+        
+        return applications.size();
     }
 }

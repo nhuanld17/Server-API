@@ -1,5 +1,7 @@
 package com.example.SERVER.controller.company;
 
+import com.example.SERVER.domain.dto.Job.CompanyJobDTO;
+import com.example.SERVER.domain.dto.common.ResultPaginationDTO;
 import com.example.SERVER.domain.dto.company.ContactInfoDTO;
 import com.example.SERVER.domain.dto.company.FoundingInfoDTO;
 import com.example.SERVER.domain.dto.company.ResCompanyInfoDTO;
@@ -12,6 +14,11 @@ import com.example.SERVER.service.company.CompanyService;
 import com.example.SERVER.service.job.JobService;
 import com.example.SERVER.service.user.UserService;
 import com.example.SERVER.util.exception.custom.JobNotExistException;
+import com.turkraft.springfilter.boot.Filter;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/company")
@@ -73,16 +81,24 @@ public class CompanyController {
 	
 	@PreAuthorize("hasRole('ROLE_COMPANY')")
 	@GetMapping("/list-job")
-	public ResponseEntity<List<Job>> getListJob() {
+	public ResponseEntity<ResultPaginationDTO> getListJob(
+			@RequestParam(defaultValue = "postAt") String sortField,
+			@RequestParam(defaultValue = "desc") String sortDirection,
+			Pageable pageable
+	) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
-		
 		Company company = currentUser.getCompany();
 		
-		List<Job> jobs = company.getJobs();
+		Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+		Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 		
-		return ResponseEntity.status(HttpStatus.OK).body(jobs);
+		ResultPaginationDTO resultPaginationDTO = this.companyService.getCompanyJob(company.getId(), sortedPageable);
+		
+		return ResponseEntity.status(HttpStatus.OK).body(resultPaginationDTO);
 	}
+	
+	
 	
 	@PreAuthorize("hasRole('ROLE_COMPANY')")
 	@GetMapping("/job/{id}")
