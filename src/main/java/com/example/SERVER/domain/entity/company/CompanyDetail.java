@@ -37,7 +37,7 @@ public class CompanyDetail {
     private String aboutUs;
 
     @Column(name = "team_size")
-    private Integer teamSize;
+    private String teamSize;
 
     @OneToOne
     @JoinColumn(name = "company_id", nullable = false)

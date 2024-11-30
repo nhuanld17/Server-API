@@ -1,15 +1,17 @@
 package com.example.SERVER.controller.company;
 
-import com.example.SERVER.domain.dto.company.CompanyDetailDTO;
-import com.example.SERVER.domain.dto.company.CompanyInfoDTO;
+import com.example.SERVER.domain.dto.company.*;
 import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.domain.entity.company.CompanyDetail;
 import com.example.SERVER.domain.entity.company.Job;
 import com.example.SERVER.domain.entity.user.User;
+import com.example.SERVER.service.company.CloudinaryService;
 import com.example.SERVER.service.company.CompanyService;
 import com.example.SERVER.service.job.JobService;
 import com.example.SERVER.service.user.UserService;
 import com.example.SERVER.util.exception.custom.IdInvalidException;
+import com.example.SERVER.util.exception.custom.JobNotExistException;
+import com.example.SERVER.util.exception.custom.ListNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
