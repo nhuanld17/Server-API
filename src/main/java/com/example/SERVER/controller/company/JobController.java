@@ -1,5 +1,6 @@
 package com.example.SERVER.controller.company;
 
+import com.example.SERVER.domain.dto.common.ResultPaginationDTO;
 import com.example.SERVER.domain.dto.job.JobDTO;
 import com.example.SERVER.domain.dto.job.JobDetailsDTO;
 import com.example.SERVER.domain.entity.company.Company;
@@ -8,6 +9,9 @@ import com.example.SERVER.domain.entity.company.Job;
 import com.example.SERVER.service.company.CompanyService;
 import com.example.SERVER.service.job.JobService;
 import com.example.SERVER.util.exception.custom.IdInvalidException;
+import com.turkraft.springfilter.boot.Filter;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -112,5 +116,13 @@ public class JobController {
         }
         return ResponseEntity.ok().body(jobDTOS);
     }
-            
+    @PreAuthorize("hasRole('ROLE_CANDIDATE')")
+    @GetMapping("")
+    public ResponseEntity<ResultPaginationDTO> searchJob(
+            @Filter Specification<Job> specs,
+            Pageable pageable
+    ) {
+        ResultPaginationDTO paginationDTO = this.jobService.handleFetchAllJobs(specs, pageable);
+        return ResponseEntity.ok().body(paginationDTO);
+    }
 }
