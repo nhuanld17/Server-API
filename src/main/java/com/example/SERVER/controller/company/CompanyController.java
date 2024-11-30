@@ -2,7 +2,6 @@ package com.example.SERVER.controller.company;
 
 import com.example.SERVER.domain.dto.company.*;
 
-import com.example.SERVER.domain.dto.Job.CompanyJobDTO;
 import com.example.SERVER.domain.dto.common.ResultPaginationDTO;
 import com.example.SERVER.domain.dto.company.CompanyInfoDTO;
 import com.example.SERVER.domain.dto.company.ContactInfoDTO;
@@ -22,14 +21,12 @@ import com.example.SERVER.util.exception.custom.ListNotFoundException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -38,8 +35,6 @@ import java.util.List;
 import java.util.Optional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/company")

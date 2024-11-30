@@ -1,4 +1,4 @@
-package com.example.SERVER.domain.dto.Job;
+package com.example.SERVER.domain.dto.job;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,7 +1,6 @@
 package com.example.SERVER.service.company;
 
-import com.example.SERVER.domain.dto.Job.CompanyJobDTO;
-import com.example.SERVER.domain.dto.Job.JobSummaryDTO;
+import com.example.SERVER.domain.dto.job.CompanyJobDTO;
 import com.example.SERVER.domain.dto.common.Meta;
 import com.example.SERVER.domain.dto.common.ResultPaginationDTO;
 import com.example.SERVER.domain.entity.company.Company;
@@ -9,17 +8,12 @@ import com.example.SERVER.domain.entity.company.Job;
 import com.example.SERVER.repository.company.CompanyRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 import org.springframework.stereotype.Service;
-import jakarta.transaction.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-
-import java.util.List;
 
 @Service
 public class CompanyService {
@@ -70,8 +64,4 @@ public class CompanyService {
         return this.companyRepository.findAll();
     }
 
-    @Transactional
-    public void saveCompany(Company company) {
-      companyRepository.save(company);
-    }
 }
