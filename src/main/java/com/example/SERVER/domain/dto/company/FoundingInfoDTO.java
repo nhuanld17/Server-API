@@ -9,7 +9,7 @@ import java.util.Date;
 @Getter
 public class FoundingInfoDTO {
 	private String industryType;
-	private int teamSize;
+	private String teamSize;
 	private Date yearOfEstablishment;
 	private String companyWebSite;
 }

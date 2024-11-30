@@ -45,5 +45,4 @@ public class CandidateDetail {
     @OneToOne
     @JoinColumn(name = "candidate_id", nullable = false)
     private Candidate candidate;
-
 }

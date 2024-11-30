@@ -5,6 +5,7 @@ import com.example.SERVER.domain.dto.job.JobDetailsDTO;
 import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.domain.entity.company.CompanyDetail;
 import com.example.SERVER.domain.entity.company.Job;
+import com.example.SERVER.service.company.CompanyService;
 import com.example.SERVER.service.job.JobService;
 import com.example.SERVER.util.exception.custom.IdInvalidException;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +25,11 @@ import java.util.Optional;
 @RestController
 public class JobController {
     private final JobService jobService;
+    private final CompanyService companyService;
 
-    public JobController(JobService jobService) {
+    public JobController(JobService jobService, CompanyService companyService) {
         this.jobService = jobService;
+        this.companyService = companyService;
     }
 
     @GetMapping("/jobs")
@@ -89,4 +92,25 @@ public class JobController {
         );
         return ResponseEntity.ok().body(jobDetailsDTO);
     }
+
+    @GetMapping("/company/jobs/{id}")
+    public ResponseEntity<List<JobDTO>> getJobFollowCompanyDetail(@PathVariable long id){
+        Optional<Company> company = companyService.getCompany(id);
+        List<Job> jobs = company.get().getJobs();
+        List<JobDTO> jobDTOS = new ArrayList<>();
+        for (Job job : jobs) {
+            jobDTOS.add(
+                    new JobDTO(
+                            job.getId(),
+                            job.getTitle(),
+                            job.getTags(),
+                            job.getJobType(),
+                            company.get().getCompanyDetail().getProfilePictureLink(),
+                            job.getMaxSalary()
+                    )
+            );
+        }
+        return ResponseEntity.ok().body(jobDTOS);
+    }
+            
 }

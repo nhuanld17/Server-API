@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 import java.util.List;
@@ -63,6 +64,10 @@ public class CompanyService {
 	}
     public Optional<Company> getCompany(long id){
         return companyRepository.findById(id);
+    }
+
+    public List<Company> findAllCompany(){
+        return this.companyRepository.findAll();
     }
 
     @Transactional
