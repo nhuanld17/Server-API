@@ -12,7 +12,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+
 import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
+
+import java.util.Optional;
 
 import java.util.List;
 
@@ -57,4 +61,12 @@ public class CompanyService {
 		
 		return resultPaginationDTO;
 	}
+    public Optional<Company> getCompany(long id){
+        return companyRepository.findById(id);
+    }
+
+    @Transactional
+    public void saveCompany(Company company) {
+      companyRepository.save(company);
+    }
 }

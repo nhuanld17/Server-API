@@ -13,6 +13,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +28,15 @@ public class JobService {
 	public void saveJob(Job job) {
 		jobRepository.save(job);
 	}
+
+	@Transactional
+	public List<Job> findAllJob() {
+		return this.jobRepository.findAll();
+	}
+	@Transactional
+	public Optional<Job> findJobDetail(long id) {
+		Optional<Job> job = jobRepository.findById(id);
+		return job;
 	
 	public ResultPaginationDTO handleFetchAllJobs(Specification<Job> specs, Pageable pageable) {
 		ResultPaginationDTO resultPaginationDTO = new ResultPaginationDTO();

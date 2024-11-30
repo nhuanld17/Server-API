@@ -1,7 +1,9 @@
 package com.example.SERVER.controller.company;
 
+
 import com.example.SERVER.domain.dto.Job.CompanyJobDTO;
 import com.example.SERVER.domain.dto.common.ResultPaginationDTO;
+import com.example.SERVER.domain.dto.company.CompanyInfoDTO;
 import com.example.SERVER.domain.dto.company.ContactInfoDTO;
 import com.example.SERVER.domain.dto.company.FoundingInfoDTO;
 import com.example.SERVER.domain.dto.company.ResCompanyInfoDTO;
@@ -9,6 +11,10 @@ import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.domain.entity.company.CompanyDetail;
 import com.example.SERVER.domain.entity.company.Job;
 import com.example.SERVER.domain.entity.user.User;
+import com.example.SERVER.service.company.CompanyService;
+import com.example.SERVER.service.job.JobService;
+import com.example.SERVER.service.user.UserService;
+import com.example.SERVER.util.exception.custom.IdInvalidException;
 import com.example.SERVER.service.company.CloudinaryService;
 import com.example.SERVER.service.company.CompanyService;
 import com.example.SERVER.service.job.JobService;
@@ -26,8 +32,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -38,6 +49,7 @@ public class CompanyController {
 	private final UserService userService;
 	private final JobService jobService;
 	private final CompanyService companyService;
+
 	private final CloudinaryService cloudinaryService;
 	
 	public CompanyController(
@@ -77,8 +89,8 @@ public class CompanyController {
 		
 		return ResponseEntity.ok().body(job);
 	}
-	
-	@PreAuthorize("hasRole('ROLE_COMPANY')")
+  
+  @PreAuthorize("hasRole('ROLE_COMPANY')")
 	@GetMapping("/list-job")
 	public ResponseEntity<ResultPaginationDTO> getListJob(
 			@RequestParam(defaultValue = "postAt") String sortField,
@@ -96,6 +108,31 @@ public class CompanyController {
 		
 		return ResponseEntity.status(HttpStatus.OK).body(resultPaginationDTO);
 	}
+
+	@GetMapping("/info/{id}")
+	public ResponseEntity<CompanyInfoDTO> getCompanyInFO(@PathVariable long id) throws IdInvalidException {
+		Optional<Company> company = companyService.getCompany(id);
+		if (company.isEmpty()) {
+			throw new IdInvalidException("id khong hop le");
+		}
+		Date dateEstablished = company.get().getCompanyDetail().getDateEstablished();
+		LocalDate localDate = dateEstablished.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		String formattedDate = localDate.format(formatter);
+
+
+		CompanyInfoDTO companyInfoDTO = new CompanyInfoDTO(
+				company.get().getId(),
+				company.get().getCompanyName(),
+				company.get().getPhone(),
+				company.get().getWebsite(),
+				company.get().getEmail(),
+				formattedDate,
+				company.get().getCompanyDetail().getProfilePictureLink(),
+				company.get().getCompanyDetail().getTeamSize()
+		);
+		return ResponseEntity.ok().body(companyInfoDTO);
+  }
 	
 	
 	
@@ -186,50 +223,7 @@ public class CompanyController {
 		return ResponseEntity.status(HttpStatus.OK).body(companyInfoDTO);
 	}
 	
-//	@PreAuthorize("hasRole('ROLE_COMPANY')")
-//	@PutMapping("/update-info")
-//	public ResponseEntity<ResCompanyInfoDTO> updateCompanyInfo(
-//			@RequestParam("companyName") String companyName,
-//			@RequestParam("aboutUs") String aboutUs,
-//			@RequestParam("imageFile") MultipartFile imageFile) {
-//		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
-//
-//		Company company = currentUser.getCompany();
-//		CompanyDetail companyDetail = company.getCompanyDetail();
-//
-//		company.setCompanyName(companyName);
-//		companyDetail.setAboutUs(aboutUs);
-//
-//		// Nếu ảnh không được cập nhật, thì lấy lại link cũ
-//		if (imageFile == null || imageFile.isEmpty()) {
-//			companyDetail.setProfilePictureLink(company.getCompanyDetail().getProfilePictureLink());
-//		} else {
-//			// Nếu thay đôi ảnh, xóa ảnh cũ ở cloud và upload lên cloud ảnh mới
-//			// Xóa ảnh cũ nếu có
-//			String oldImageUrl = company.getCompanyDetail().getProfilePictureLink();
-//			if (oldImageUrl != null && !oldImageUrl.isEmpty()) {
-//				this.cloudinaryService.delete(oldImageUrl, "CompanyAvatar");
-//			}
-//
-//			Map data = this.cloudinaryService.upload(imageFile, "CompanyAvatar");
-//			String pictureProfileLink = (String) data.get("secure_url");
-//			companyDetail.setProfilePictureLink(pictureProfileLink);
-//		}
-//
-//		// Lưu lại
-//		company.setCompanyDetail(companyDetail);
-//		companyService.saveCompany(company);
-//
-//		// Tạo ResCompanyInfoDTO để trả về lại thông tin đã cập nhật
-//		// để front end set lại giá trị của các ô input
-//		ResCompanyInfoDTO companyInfoDTO = new ResCompanyInfoDTO();
-//		companyInfoDTO.setCompanyName(company.getCompanyName());
-//		companyInfoDTO.setAboutUs(company.getCompanyDetail().getAboutUs());
-//		companyInfoDTO.setImgLink(company.getCompanyDetail().getProfilePictureLink());
-//
-//		return ResponseEntity.status(HttpStatus.OK).body(companyInfoDTO);
-//	}
+
 	
 	// Dành cho tab Company info
 	@PreAuthorize("hasRole('ROLE_COMPANY')")
