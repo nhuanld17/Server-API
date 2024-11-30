@@ -1,6 +1,13 @@
 package com.example.SERVER.controller.company;
 
 import com.example.SERVER.domain.dto.company.*;
+
+import com.example.SERVER.domain.dto.Job.CompanyJobDTO;
+import com.example.SERVER.domain.dto.common.ResultPaginationDTO;
+import com.example.SERVER.domain.dto.company.CompanyInfoDTO;
+import com.example.SERVER.domain.dto.company.ContactInfoDTO;
+import com.example.SERVER.domain.dto.company.FoundingInfoDTO;
+import com.example.SERVER.domain.dto.company.ResCompanyInfoDTO;
 import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.domain.entity.company.CompanyDetail;
 import com.example.SERVER.domain.entity.company.Job;
@@ -12,6 +19,10 @@ import com.example.SERVER.service.user.UserService;
 import com.example.SERVER.util.exception.custom.IdInvalidException;
 import com.example.SERVER.util.exception.custom.JobNotExistException;
 import com.example.SERVER.util.exception.custom.ListNotFoundException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,6 +39,7 @@ import java.util.Optional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/company")
@@ -76,18 +88,24 @@ public class CompanyController {
 		
 		return ResponseEntity.ok().body(job);
 	}
-
+  
+  @PreAuthorize("hasRole('ROLE_COMPANY')")
 	@GetMapping("/list-job")
-		@PreAuthorize("hasRole('ROLE_COMPANY')")
-	public ResponseEntity<List<Job>> getListJob() {
+	public ResponseEntity<ResultPaginationDTO> getListJob(
+			@RequestParam(defaultValue = "postAt") String sortField,
+			@RequestParam(defaultValue = "desc") String sortDirection,
+			Pageable pageable
+	) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
-		
 		Company company = currentUser.getCompany();
 		
-		List<Job> jobs = company.getJobs();
+		Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+		Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 		
-		return ResponseEntity.status(HttpStatus.OK).body(jobs);
+		ResultPaginationDTO resultPaginationDTO = this.companyService.getCompanyJob(company.getId(), sortedPageable);
+		
+		return ResponseEntity.status(HttpStatus.OK).body(resultPaginationDTO);
 	}
 
 	@GetMapping("/info/{id}")

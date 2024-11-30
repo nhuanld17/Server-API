@@ -3,6 +3,7 @@ package com.example.SERVER.service.job;
 import com.example.SERVER.domain.dto.Job.JobSummaryDTO;
 import com.example.SERVER.domain.dto.common.Meta;
 import com.example.SERVER.domain.dto.common.ResultPaginationDTO;
+import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.domain.entity.company.Job;
 import com.example.SERVER.repository.company.JobRepository;
 import jakarta.transaction.Transactional;
