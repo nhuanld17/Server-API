@@ -2,15 +2,14 @@ package com.example.SERVER.domain.entity.user;
 
 import com.example.SERVER.domain.entity.candidate.Candidate;
 import com.example.SERVER.domain.entity.company.Company;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.Set;
 
 @Data
@@ -18,6 +17,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Entity
 @Table(name = "user")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id") // Thêm ID duy nhất
 public class User {
 	@Id
 	@Column(name = "user_id")
@@ -29,7 +29,7 @@ public class User {
 
 	@Column(name = "password")
 	private String password;
-	
+
 	@Column(columnDefinition = "MEDIUMTEXT")
 	private String refreshToken;
 
@@ -45,8 +45,7 @@ public class User {
 	private Set<Role> roles;
 
 	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-	@JsonManagedReference // Tránh lỗi vòng lặp vô hạn khi trả ra JSON
-	private Candidate candidate; // @JsonManagedReference phải để ở bảng cha
+	private Candidate candidate; // Không cần JsonManagedReference hoặc JsonBackReference nữa
 
 	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private Company company;

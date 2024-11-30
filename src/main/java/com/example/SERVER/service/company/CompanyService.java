@@ -4,6 +4,7 @@ import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.repository.company.CompanyRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -15,6 +16,10 @@ public class CompanyService {
     }
     public Optional<Company> getCompany(long id){
         return companyRepository.findById(id);
+    }
+
+    public List<Company> findAllCompany(){
+        return this.companyRepository.findAll();
     }
 
 }

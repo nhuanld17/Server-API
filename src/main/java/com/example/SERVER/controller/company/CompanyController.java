@@ -1,6 +1,8 @@
 package com.example.SERVER.controller.company;
 
+import com.example.SERVER.domain.dto.company.CompanyDetailDTO;
 import com.example.SERVER.domain.dto.company.CompanyInfoDTO;
+import com.example.SERVER.domain.dto.company.CompanyIntroDTO;
 import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.domain.entity.company.Job;
 import com.example.SERVER.domain.entity.user.User;
@@ -8,6 +10,7 @@ import com.example.SERVER.service.company.CompanyService;
 import com.example.SERVER.service.job.JobService;
 import com.example.SERVER.service.user.UserService;
 import com.example.SERVER.util.exception.custom.IdInvalidException;
+import com.example.SERVER.util.exception.custom.ListNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -102,5 +105,56 @@ public class CompanyController {
 				company.get().getCompanyDetail().getTeamSize()
 		);
 		return ResponseEntity.ok().body(companyInfoDTO);
+	}
+
+	@GetMapping("/list-intro")
+	public ResponseEntity<List<CompanyIntroDTO>> getListCompaniesIntro() throws ListNotFoundException {
+		List<Company> companies = companyService.findAllCompany();
+		if (companies.isEmpty()){
+			throw new ListNotFoundException("khong co danh sach company");
+		}
+		List<CompanyIntroDTO> companyIntroDTOs = new ArrayList<>();
+
+
+		for (Company company : companies) {
+			companyIntroDTOs.add(
+				new CompanyIntroDTO(
+						company.getId(),
+						company.getCompanyName(),
+						company.getCompanyDetail().getTeamSize(),
+						company.getJobs().size(),
+						company.getCompanyDetail().getProfilePictureLink()
+				)
+			);
+		};
+
+		return ResponseEntity.ok().body(companyIntroDTOs);
+	}
+
+	@GetMapping("/detail/{id}")
+	public ResponseEntity<CompanyDetailDTO> getCompanyDetail(@PathVariable long id) throws IdInvalidException{
+		Optional<Company> company = companyService.getCompany(id);
+		if (company.isEmpty()) {
+			throw new IdInvalidException("ID khong hop le, khong tim thay cong ty phu hop");
+		}
+		Date dateEstablished = company.get().getCompanyDetail().getDateEstablished();
+		LocalDate localDate = dateEstablished.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		String formattedDate = localDate.format(formatter);
+
+		CompanyDetailDTO companyDetailDTO = new CompanyDetailDTO(
+				company.get().getId(),
+				company.get().getCompanyName(),
+				company.get().getPhone(),
+				company.get().getWebsite(),
+				company.get().getEmail(),
+				formattedDate,
+				company.get().getCompanyDetail().getProfilePictureLink(),
+				company.get().getCompanyDetail().getTeamSize(),
+				company.get().getCompanyDetail().getDescription(),
+				company.get().getCompanyDetail().getAboutUs()
+		);
+
+		return ResponseEntity.ok().body(companyDetailDTO);
 	}
 }

@@ -21,7 +21,7 @@ public class Application {
     @Column(name = "cv_link")
     private String cvLink;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "candidate_id", nullable = false)
     private Candidate candidate;
 
