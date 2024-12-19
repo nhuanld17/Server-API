@@ -241,5 +241,57 @@ public class CandidateController {
 
         return ResponseEntity.ok().body(jobWishListDTOs);
     }
+    @GetMapping("/list-intro")
+    public ResponseEntity<List<CandidateIntroDTO>> getListCandidateIntro(){
+        List<Candidate> candidates = candidateService.findAllCandidate();
+        List<CandidateIntroDTO> candidateIntroDTOS = new ArrayList<>();
+
+        for (Candidate candidate : candidates) {
+            candidateIntroDTOS.add(new CandidateIntroDTO(
+               candidate.getId(),
+               candidate.getFullName(),
+               candidate.getTitle(),
+               candidate.getCandidateDetail().getLocation(),
+               candidate.getPictureProfileLink(),
+               candidate.getCandidateDetail().getExperience()
+            ));
+        }
+
+        return ResponseEntity.ok().body(candidateIntroDTOS);
+    }
+
+    @GetMapping("/check/detail/{id}")
+    public ResponseEntity<CandidateCheckDetailDTO> getCandidateCheckDetail(@PathVariable long id){
+        Optional<Candidate> candidate = candidateService.findCandidateById(id);
+
+        Date birthDate = candidate.get().getCandidateDetail().getBirthDate();
+        LocalDate localDate = birthDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String formattedDate = localDate.format(formatter);
+
+
+        CandidateCheckDetailDTO candidateCheckDetailDTO = new CandidateCheckDetailDTO(
+                candidate.get().getId(),
+                candidate.get().getFullName(),
+                candidate.get().getTitle(),
+                candidate.get().getPortfolio(),
+                candidate.get().getResumeLink(),
+                formattedDate,
+                candidate.get().getCandidateDetail().getGender(),
+                candidate.get().getCandidateDetail().getEducation(),
+                candidate.get().getCandidateDetail().getExperience(),
+                candidate.get().getCandidateDetail().getBio(),
+                candidate.get().getCandidateDetail().getLocation(),
+                candidate.get().getCandidateDetail().getPhoneNumber(),
+                candidate.get().getCandidateDetail().getEmail(),
+                candidate.get().getLinkSocial().getFbLink(),
+                candidate.get().getLinkSocial().getTwitter_link(),
+                candidate.get().getLinkSocial().getLinked_link(),
+                candidate.get().getPictureProfileLink()
+        );
+
+        return ResponseEntity.ok().body(candidateCheckDetailDTO);
+    }
+
 
 }

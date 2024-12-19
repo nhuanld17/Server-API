@@ -373,4 +373,11 @@ public class CompanyController {
 
 		return ResponseEntity.ok().body(companyDetailDTO);
 	}
+
+	@GetMapping("/pictureLink")
+	public ResponseEntity<?> getPictureLink(){
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
+		return ResponseEntity.ok().body(currentUser.getCompany().getCompanyDetail().getProfilePictureLink());
+	}
 }

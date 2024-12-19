@@ -5,6 +5,7 @@ import com.example.SERVER.repository.candidate.CandidateRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,5 +23,8 @@ public class CandidateService {
     @Transactional
     public void updateCandidate(Candidate candidate){
         this.candidateRepository.save(candidate);
+    }
+    public List<Candidate> findAllCandidate(){
+        return this.candidateRepository.findAll();
     }
 }
