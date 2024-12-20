@@ -84,7 +84,7 @@ public class JobController {
                 expirationDateF,
                 job.get().getJobLevel(),
                 job.get().getDescription(),
-                job.get().getResponesibility(),
+                job.get().getResponsibility(),
                 postAtF,
                 company.getCompanyName(),
                 company.getPhone(),

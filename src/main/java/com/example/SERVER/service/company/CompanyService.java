@@ -63,5 +63,13 @@ public class CompanyService {
     public List<Company> findAllCompany(){
         return this.companyRepository.findAll();
     }
+	
+	public boolean isEmailExist(String email, int id) {
+		return companyRepository.countEmail(email, id) > 0;
+	}
+	
+	public boolean isPhoneExist(String phone, int id) {
+		return companyRepository.countPhoneNumber(phone, id) > 0;
+	}
 
 }

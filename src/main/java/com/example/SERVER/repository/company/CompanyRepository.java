@@ -13,4 +13,12 @@ import org.springframework.stereotype.Repository;
 public interface CompanyRepository extends JpaRepository<Company, Long> {
 	@Query("select j from Job j where j.company.id = :companyId")
 	Page<Job> findJobsByCompanyId(@Param("companyId") Long companyId, Pageable pageable);
+	
+	@Query(value = "SELECT COUNT(email) FROM company WHERE email = :email AND company.company_id <> :id",
+			nativeQuery = true)
+	int countEmail(@Param("email") String email, @Param("id") int id);
+	
+	@Query(value = "SELECT COUNT(phone) FROM company WHERE phone = :phoneNumber AND company.company_id <> :id",
+	nativeQuery = true)
+	int countPhoneNumber(@Param("phoneNumber") String phoneNumber, @Param("id") int id);
 }

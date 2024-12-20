@@ -1,5 +1,6 @@
 package com.example.SERVER.controller.auth;
 
+import com.example.SERVER.domain.dto.company.ChangePassDTO;
 import com.example.SERVER.domain.dto.user.LoginDTO;
 import com.example.SERVER.domain.dto.user.RegisterDTO;
 import com.example.SERVER.domain.dto.user.ResLoginDTO;
@@ -17,6 +18,8 @@ import com.example.SERVER.service.user.UserService;
 import com.example.SERVER.util.SecurityUtil;
 import com.example.SERVER.util.exception.custom.EmailRegisteredException;
 import com.example.SERVER.util.exception.custom.IdInvalidException;
+import com.example.SERVER.util.exception.custom.NewPassAndConfirmPassNotMatchException;
+import com.example.SERVER.util.exception.custom.WrongCurrentPasswordException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,6 +29,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,6 +42,7 @@ public class AuthController {
 	private final UserService userService;
 	private final SecurityUtil securityUtil;
 	private final RoleService roleService;
+	private final BCryptPasswordEncoder passwordEncoder;
 	
 	@Value("${jwt.refresh-token-validity-in-seconds}")
 	private long refreshTokenExpiration;
@@ -45,11 +50,13 @@ public class AuthController {
 	public AuthController(AuthenticationManagerBuilder authenticationManagerBuilder,
 	                      UserService userService,
 	                      SecurityUtil securityUtil,
-	                      RoleService roleService) {
+	                      RoleService roleService,
+	                      BCryptPasswordEncoder passwordEncoder) {
 		this.authenticationManagerBuilder = authenticationManagerBuilder;
 		this.userService = userService;
 		this.securityUtil = securityUtil;
 		this.roleService = roleService;
+		this.passwordEncoder = passwordEncoder;
 	}
 	
 	@PostMapping("/auth/login")
@@ -286,6 +293,25 @@ public class AuthController {
 		return ResponseEntity.ok()
 				.header(HttpHeaders.SET_COOKIE, deleteSpringCookie.toString())
 				.body(null);
+	}
+	
+	@PostMapping("/auth/change-password")
+	public ResponseEntity<String> changePassword(@RequestBody ChangePassDTO changePassDTO) throws WrongCurrentPasswordException, NewPassAndConfirmPassNotMatchException {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
+		
+		if (!passwordEncoder.matches(changePassDTO.getCurrentPassword(), currentUser.getPassword())) {
+			throw new WrongCurrentPasswordException("Wrong current password");
+		}
+		
+		if (!changePassDTO.getNewPassword().equals(changePassDTO.getConfirmPassword())){
+			throw new NewPassAndConfirmPassNotMatchException("New password and confirm password not match");
+		}
+		
+		currentUser.setPassword(changePassDTO.getNewPassword());
+		this.userService.handleRegisterUser(currentUser);
+		
+		return ResponseEntity.ok().body("Password changed successfully");
 	}
 	
 }

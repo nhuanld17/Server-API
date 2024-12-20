@@ -1,9 +1,7 @@
 package com.example.SERVER.util.exception;
 
 import com.example.SERVER.domain.pojo.RestResponse;
-import com.example.SERVER.util.exception.custom.EmailRegisteredException;
-import com.example.SERVER.util.exception.custom.IdInvalidException;
-import com.example.SERVER.util.exception.custom.JobNotExistException;
+import com.example.SERVER.util.exception.custom.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -75,6 +73,36 @@ public class GlobalExceptionHandler {
         restResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
         restResponse.setError(e.getMessage());
         restResponse.setMessage("Bài đăng không tồn tại nhé");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(restResponse);
+    }
+    
+    // Xử lí ngoại lệ số đt dã được đk
+    @ExceptionHandler({PhoneRegisteredException.class})
+    public ResponseEntity<RestResponse<Object>> handlePhoneExistedException(PhoneRegisteredException e){
+        RestResponse<Object> restResponse = new RestResponse<>();
+        restResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        restResponse.setError(e.getMessage());
+        restResponse.setMessage("SDT người khác dùng rồi nhé");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(restResponse);
+    }
+    
+    // Ngoại lệ sai mk hiện tại khi đổi mk
+    @ExceptionHandler(WrongCurrentPasswordException.class)
+    public ResponseEntity<RestResponse<Object>> handleWrongCurrentPasswordException(WrongCurrentPasswordException e){
+        RestResponse<Object> restResponse = new RestResponse<>();
+        restResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        restResponse.setError(e.getMessage());
+        restResponse.setMessage("Current password is wrong");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(restResponse);
+    }
+    
+    // Ngoại lệ mk mới và mk xác nhận ko trùng
+    @ExceptionHandler(NewPassAndConfirmPassNotMatchException.class)
+    public ResponseEntity<RestResponse<Object>> handleNewPassAndConfirmPassNotMatchException(NewPassAndConfirmPassNotMatchException e){
+        RestResponse<Object> restResponse = new RestResponse<>();
+        restResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        restResponse.setError(e.getMessage());
+        restResponse.setMessage("New password and confirm password are not match");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(restResponse);
     }
 }
