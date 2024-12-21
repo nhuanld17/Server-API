@@ -53,10 +53,10 @@ public class Job {
     @Column(name = "job_level")
     private String jobLevel;
 
-    @Column(name = "description")
+    @Column(name = "description",columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "responesibility")
+    @Column(name = "responesibility",columnDefinition = "TEXT")
     private String responesibility;
 
     @Column(name = "post_at")

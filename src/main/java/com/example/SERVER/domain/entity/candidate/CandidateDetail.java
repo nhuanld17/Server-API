@@ -30,7 +30,7 @@ public class CandidateDetail {
     @Column(name = "experience")
     private String experience;
 
-    @Column(name = "bio")
+    @Column(name = "bio",columnDefinition = "TEXT")
     private String bio;
 
     @Column(name = "location")
