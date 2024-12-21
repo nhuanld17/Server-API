@@ -10,12 +10,15 @@ import com.example.SERVER.service.company.CompanyService;
 import com.example.SERVER.service.job.JobService;
 import com.example.SERVER.util.exception.custom.IdInvalidException;
 import com.turkraft.springfilter.boot.Filter;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
@@ -36,24 +39,25 @@ public class JobController {
         this.companyService = companyService;
     }
 
-    @GetMapping("/jobs")
+    @GetMapping("/job/search")
     @PreAuthorize("hasRole('ROLE_CANDIDATE')")
-    public ResponseEntity<List<JobDTO>> useGetAllJob(){
-        List<Job> jobs = jobService.findAllJob();
-        ArrayList<JobDTO> listJob = new ArrayList<>();
-        for (Job job : jobs) {
-            JobDTO jobDTO = new JobDTO(
-              job.getId(),
-              job.getTitle(),
-              job.getTags(),
-              job.getJobType(),
-              job.getCompany().getCompanyDetail().getProfilePictureLink(),
-              job.getMaxSalary()
-            );
-            listJob.add(jobDTO);
-        }
-        return ResponseEntity.ok().body(listJob);
+    public ResponseEntity<ResultPaginationDTO> useGetAllJob(
+            @RequestParam(value = "q", required = false) String filter, // Job title
+            @RequestParam(value = "sortField", defaultValue = "id") String sortField, // trường sắp xếp
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection, // Hướng sắp xếp
+            Pageable pageable
+    ){
+        // Tạo đối tượng sort từ sortField và sortDirection
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+        
+        // Tạo đối tượng Pageable phân trang
+        Pageable sortedPage = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+        
+        ResultPaginationDTO resultPaginationDTO = this.jobService.handleSearchJob(filter, sortedPage);
+        
+        return ResponseEntity.ok().body(resultPaginationDTO);
     }
+    
     @GetMapping("/jobs/{id}")
     public ResponseEntity<JobDetailsDTO> useGetJobDetail(@PathVariable long id) throws IdInvalidException {
         Optional<Job> job = jobService.findJobDetail(id);

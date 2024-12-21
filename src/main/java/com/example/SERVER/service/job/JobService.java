@@ -1,6 +1,7 @@
 package com.example.SERVER.service.job;
 
 
+import com.example.SERVER.domain.dto.job.JobDTO;
 import com.example.SERVER.domain.dto.job.JobSummaryDTO;
 import com.example.SERVER.domain.dto.common.Meta;
 import com.example.SERVER.domain.dto.common.ResultPaginationDTO;
@@ -61,6 +62,45 @@ public class JobService {
 				)).collect(Collectors.toList());
 		
 		resultPaginationDTO.setResult(jobSummaryDTOS);
+		
+		return resultPaginationDTO;
+	}
+	
+	// candidate tìm kiếm job
+	public ResultPaginationDTO handleSearchJob(String filter, Pageable pageable) {
+		ResultPaginationDTO resultPaginationDTO = new ResultPaginationDTO();
+		Meta meta = new Meta();
+		
+		
+		
+//		Page<Job> jobs = jobRepository.findAllByTitleContaining(filter, pageable);
+		
+		Page<Job> jobs = null;
+		
+		if (filter == null && filter.isEmpty()) {
+			jobs = jobRepository.findAll(pageable);
+		} else {
+			jobs = jobRepository.findAllByTitleContaining(filter, pageable);
+		}
+		
+		meta.setPage(pageable.getPageNumber() + 1);
+		meta.setPageSize(pageable.getPageSize());
+		meta.setPages(jobs.getTotalPages());
+		meta.setTotal(jobs.getTotalElements());
+		
+		resultPaginationDTO.setMeta(meta);
+		
+		List<JobDTO> jobDTOS = jobs.getContent()
+				.stream().map(job -> new JobDTO(
+						job.getId(),
+						job.getTitle(),
+						job.getTags(),
+						job.getJobType(),
+						job.getCompany().getCompanyDetail().getProfilePictureLink(),
+						job.getMaxSalary()
+				)).toList();
+		
+		resultPaginationDTO.setResult(jobDTOS);
 		
 		return resultPaginationDTO;
 	}
