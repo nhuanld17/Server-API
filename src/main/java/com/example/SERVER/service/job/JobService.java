@@ -5,6 +5,7 @@ import com.example.SERVER.domain.dto.job.JobDTO;
 import com.example.SERVER.domain.dto.job.JobSummaryDTO;
 import com.example.SERVER.domain.dto.common.Meta;
 import com.example.SERVER.domain.dto.common.ResultPaginationDTO;
+import com.example.SERVER.domain.entity.company.Application;
 import com.example.SERVER.domain.entity.company.Job;
 import com.example.SERVER.repository.company.JobRepository;
 import jakarta.transaction.Transactional;
@@ -103,5 +104,10 @@ public class JobService {
 		resultPaginationDTO.setResult(jobDTOS);
 		
 		return resultPaginationDTO;
+	}
+	
+	public Job findJobById(long id) {
+		Optional<Job> job = jobRepository.findById(id);
+		return job.orElse(null);
 	}
 }

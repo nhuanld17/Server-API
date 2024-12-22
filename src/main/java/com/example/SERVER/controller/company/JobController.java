@@ -6,6 +6,7 @@ import com.example.SERVER.domain.dto.job.JobDetailsDTO;
 import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.domain.entity.company.CompanyDetail;
 import com.example.SERVER.domain.entity.company.Job;
+import com.example.SERVER.service.company.ApplicationService;
 import com.example.SERVER.service.company.CompanyService;
 import com.example.SERVER.service.job.JobService;
 import com.example.SERVER.util.exception.custom.IdInvalidException;
@@ -33,10 +34,14 @@ import java.util.Optional;
 public class JobController {
     private final JobService jobService;
     private final CompanyService companyService;
+    private final ApplicationService applicationService;
 
-    public JobController(JobService jobService, CompanyService companyService) {
+    public JobController(JobService jobService,
+                         CompanyService companyService,
+                         ApplicationService applicationService) {
         this.jobService = jobService;
         this.companyService = companyService;
+        this.applicationService = applicationService;
     }
 
     @GetMapping("/job/search")
@@ -128,5 +133,26 @@ public class JobController {
     ) {
         ResultPaginationDTO paginationDTO = this.jobService.handleFetchAllJobs(specs, pageable);
         return ResponseEntity.ok().body(paginationDTO);
+    }
+    
+    @PreAuthorize("hasRole('ROLE_COMPANY')")
+    @GetMapping("/jobs/{id}/application/search")
+    public ResponseEntity<ResultPaginationDTO> searchJobCandidates(
+            @PathVariable int id,
+            @RequestParam(value = "q",required = false) String fullname,
+            @RequestParam(value = "sortField", defaultValue = "id") String sortField, // trường sắp xếp
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection, // Hướng sắp xếp
+            Pageable pageable
+    ){
+        // Tạo đối tượng sort từ sortField và sortDirection
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+        
+        // Tạo đối tượng Pageable phân trang
+        Pageable sortedPage = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+        
+        ResultPaginationDTO resultPaginationDTO = this.applicationService
+                .handleSearchApplication(id ,fullname, sortedPage);
+        
+        return ResponseEntity.ok().body(resultPaginationDTO);
     }
 }
