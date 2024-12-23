@@ -53,7 +53,7 @@ public class Job {
     @Column(name = "job_level")
     private String jobLevel;
 
-    @Column(name = "description")
+    @Column(name = "description",columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "responsibility")

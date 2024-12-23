@@ -3,20 +3,24 @@ package com.example.SERVER.controller.company;
 import com.example.SERVER.domain.dto.common.ResultPaginationDTO;
 import com.example.SERVER.domain.dto.job.JobDTO;
 import com.example.SERVER.domain.dto.job.JobDetailsDTO;
+import com.example.SERVER.domain.entity.candidate.Candidate;
+import com.example.SERVER.domain.entity.company.Application;
 import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.domain.entity.company.CompanyDetail;
 import com.example.SERVER.domain.entity.company.Job;
+import com.example.SERVER.service.canditate.CandidateService;
+import com.example.SERVER.service.company.ApplicationService;
 import com.example.SERVER.service.company.CompanyService;
 import com.example.SERVER.service.job.JobService;
 import com.example.SERVER.util.exception.custom.IdInvalidException;
 import com.turkraft.springfilter.boot.Filter;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -30,30 +34,38 @@ import java.util.Optional;
 public class JobController {
     private final JobService jobService;
     private final CompanyService companyService;
+    private final ApplicationService applicationService;
+    private final CandidateService candidateService;
 
-    public JobController(JobService jobService, CompanyService companyService) {
+    public JobController(JobService jobService,
+                         CompanyService companyService,
+                         ApplicationService applicationService,
+                         CandidateService candidateService) {
         this.jobService = jobService;
         this.companyService = companyService;
+        this.applicationService = applicationService;
+        this.candidateService = candidateService;
     }
 
-    @GetMapping("/jobs")
+    @GetMapping("/job/search")
     @PreAuthorize("hasRole('ROLE_CANDIDATE')")
-    public ResponseEntity<List<JobDTO>> useGetAllJob(){
-        List<Job> jobs = jobService.findAllJob();
-        ArrayList<JobDTO> listJob = new ArrayList<>();
-        for (Job job : jobs) {
-            JobDTO jobDTO = new JobDTO(
-              job.getId(),
-              job.getTitle(),
-              job.getTags(),
-              job.getJobType(),
-              job.getCompany().getCompanyDetail().getProfilePictureLink(),
-              job.getMaxSalary()
-            );
-            listJob.add(jobDTO);
-        }
-        return ResponseEntity.ok().body(listJob);
+    public ResponseEntity<ResultPaginationDTO> useGetAllJob(
+            @RequestParam(value = "q", required = false) String filter, // Job title
+            @RequestParam(value = "sortField", defaultValue = "id") String sortField, // trường sắp xếp
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection, // Hướng sắp xếp
+            Pageable pageable
+    ){
+        // Tạo đối tượng sort từ sortField và sortDirection
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+        
+        // Tạo đối tượng Pageable phân trang
+        Pageable sortedPage = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+        
+        ResultPaginationDTO resultPaginationDTO = this.jobService.handleSearchJob(filter, sortedPage);
+        
+        return ResponseEntity.ok().body(resultPaginationDTO);
     }
+    
     @GetMapping("/jobs/{id}")
     public ResponseEntity<JobDetailsDTO> useGetJobDetail(@PathVariable long id) throws IdInvalidException {
         Optional<Job> job = jobService.findJobDetail(id);
@@ -124,5 +136,47 @@ public class JobController {
     ) {
         ResultPaginationDTO paginationDTO = this.jobService.handleFetchAllJobs(specs, pageable);
         return ResponseEntity.ok().body(paginationDTO);
+    }
+    
+    @PreAuthorize("hasRole('ROLE_COMPANY')")
+    @GetMapping("/jobs/{id}/application/search")
+    public ResponseEntity<ResultPaginationDTO> searchJobCandidates(
+            @PathVariable int id,
+            @RequestParam(value = "q",required = false) String fullname,
+            @RequestParam(value = "sortField", defaultValue = "id") String sortField, // trường sắp xếp
+            @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection, // Hướng sắp xếp
+            Pageable pageable
+    ){
+        // Tạo đối tượng sort từ sortField và sortDirection
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+        
+        // Tạo đối tượng Pageable phân trang
+        Pageable sortedPage = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+        
+        ResultPaginationDTO resultPaginationDTO = this.applicationService
+                .handleSearchApplication(id ,fullname, sortedPage);
+        
+        return ResponseEntity.ok().body(resultPaginationDTO);
+    }
+    
+    @PreAuthorize("hasRole('ROLE_COMPANY')")
+    @PostMapping("job/delete/{applicationId}")
+    public ResponseEntity<String> deleteJob(@PathVariable long applicationId) {
+        // Lấy application và các thực thể cha liên quan
+        Application application = applicationService.getApplicationById(applicationId);
+        Candidate candidate = application.getCandidate();
+        Job job = application.getJob();
+        
+        // Lấy list application của candidate và job, xóa application và save
+        List<Application> candidateApplications = candidate.getApplications();
+        List<Application> jobApplications = job.getApplications();
+        
+        candidateApplications.remove(application);
+        jobApplications.remove(application);
+        
+        this.candidateService.updateCandidate(candidate);
+        this.jobService.saveJob(job);
+        
+        return ResponseEntity.ok().body("Xóa thành công");
     }
 }
