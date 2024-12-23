@@ -56,8 +56,8 @@ public class Job {
     @Column(name = "description",columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "responesibility",columnDefinition = "TEXT")
-    private String responesibility;
+    @Column(name = "responsibility")
+    private String responsibility;
 
     @Column(name = "post_at")
     private Instant postAt;

@@ -15,9 +15,7 @@ import com.example.SERVER.service.company.CloudinaryService;
 import com.example.SERVER.service.company.CompanyService;
 import com.example.SERVER.service.job.JobService;
 import com.example.SERVER.service.user.UserService;
-import com.example.SERVER.util.exception.custom.IdInvalidException;
-import com.example.SERVER.util.exception.custom.JobNotExistException;
-import com.example.SERVER.util.exception.custom.ListNotFoundException;
+import com.example.SERVER.util.exception.custom.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -26,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.ZoneId;
@@ -43,16 +42,17 @@ public class CompanyController {
 	private final UserService userService;
 	private final JobService jobService;
 	private final CompanyService companyService;
-
 	private final CloudinaryService cloudinaryService;
+	private final BCryptPasswordEncoder passwordEncoder;
 
 	public CompanyController(
 			UserService userService, JobService jobService,
-			CompanyService companyService, CloudinaryService cloudinaryService) {
+			CompanyService companyService, CloudinaryService cloudinaryService, BCryptPasswordEncoder passwordEncoder) {
 		this.userService = userService;
 		this.jobService = jobService;
 		this.companyService = companyService;
 		this.cloudinaryService = cloudinaryService;
+		this.passwordEncoder = passwordEncoder;
 	}
 	
 	@PreAuthorize("hasRole('ROLE_COMPANY')")
@@ -169,7 +169,7 @@ public class CompanyController {
 		existingJob.setExpirationDate(job.getExpirationDate());
 		existingJob.setJobLevel(job.getJobLevel());
 		existingJob.setDescription(job.getDescription());
-		existingJob.setResponesibility(job.getResponesibility());
+		existingJob.setResponsibility(job.getResponsibility());
 
 		// Lưu lại công ty với job đã cập nhật
 		companyService.saveCompany(company);
@@ -306,12 +306,20 @@ public class CompanyController {
 
 	@PreAuthorize("hasRole('ROLE_COMPANY')")
 	@PutMapping("/update-contact-info")
-	public ResponseEntity<ContactInfoDTO> updateContactInfo(@RequestBody ContactInfoDTO contactInfoDTO) {
+	public ResponseEntity<ContactInfoDTO> updateContactInfo(@RequestBody ContactInfoDTO contactInfoDTO) throws EmailRegisteredException, PhoneRegisteredException {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		User currentUser = this.userService.handleGetUserByUsername(authentication.getName());
 
 		Company company = currentUser.getCompany();
 		CompanyDetail companyDetail = company.getCompanyDetail();
+		
+		if (companyService.isEmailExist(contactInfoDTO.getEmail(), company.getId())) {
+			throw new EmailRegisteredException("Email duplicated");
+		}
+		
+		if (companyService.isPhoneExist(contactInfoDTO.getPhoneNumber(), company.getId())){
+			throw new PhoneRegisteredException("Phone number is registered by another account");
+		}
 
 		company.setEmail(contactInfoDTO.getEmail());
 		companyDetail.setLocation(contactInfoDTO.getLocation());
