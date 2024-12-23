@@ -3,9 +3,12 @@ package com.example.SERVER.controller.company;
 import com.example.SERVER.domain.dto.common.ResultPaginationDTO;
 import com.example.SERVER.domain.dto.job.JobDTO;
 import com.example.SERVER.domain.dto.job.JobDetailsDTO;
+import com.example.SERVER.domain.entity.candidate.Candidate;
+import com.example.SERVER.domain.entity.company.Application;
 import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.domain.entity.company.CompanyDetail;
 import com.example.SERVER.domain.entity.company.Job;
+import com.example.SERVER.service.canditate.CandidateService;
 import com.example.SERVER.service.company.ApplicationService;
 import com.example.SERVER.service.company.CompanyService;
 import com.example.SERVER.service.job.JobService;
@@ -17,10 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -35,13 +35,16 @@ public class JobController {
     private final JobService jobService;
     private final CompanyService companyService;
     private final ApplicationService applicationService;
+    private final CandidateService candidateService;
 
     public JobController(JobService jobService,
                          CompanyService companyService,
-                         ApplicationService applicationService) {
+                         ApplicationService applicationService,
+                         CandidateService candidateService) {
         this.jobService = jobService;
         this.companyService = companyService;
         this.applicationService = applicationService;
+        this.candidateService = candidateService;
     }
 
     @GetMapping("/job/search")
@@ -154,5 +157,26 @@ public class JobController {
                 .handleSearchApplication(id ,fullname, sortedPage);
         
         return ResponseEntity.ok().body(resultPaginationDTO);
+    }
+    
+    @PreAuthorize("hasRole('ROLE_COMPANY')")
+    @PostMapping("job/delete/{applicationId}")
+    public ResponseEntity<String> deleteJob(@PathVariable long applicationId) {
+        // Lấy application và các thực thể cha liên quan
+        Application application = applicationService.getApplicationById(applicationId);
+        Candidate candidate = application.getCandidate();
+        Job job = application.getJob();
+        
+        // Lấy list application của candidate và job, xóa application và save
+        List<Application> candidateApplications = candidate.getApplications();
+        List<Application> jobApplications = job.getApplications();
+        
+        candidateApplications.remove(application);
+        jobApplications.remove(application);
+        
+        this.candidateService.updateCandidate(candidate);
+        this.jobService.saveJob(job);
+        
+        return ResponseEntity.ok().body("Xóa thành công");
     }
 }

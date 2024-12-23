@@ -67,4 +67,8 @@ public class ApplicationService {
         
         return resultPaginationDTO;
     }
+    
+    public Application getApplicationById(Long id) {
+        return applicationRepository.getReferenceById(id);
+    }
 }
