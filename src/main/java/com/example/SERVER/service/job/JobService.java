@@ -106,4 +106,8 @@ public class JobService {
 		Optional<Job> job = jobRepository.findById(id);
 		return job.orElse(null);
 	}
+	
+	public void deleteJob(Job job) {
+		this.jobRepository.delete(job);
+	}
 }

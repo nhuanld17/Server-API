@@ -7,6 +7,7 @@ import com.example.SERVER.domain.dto.company.CompanyInfoDTO;
 import com.example.SERVER.domain.dto.company.ContactInfoDTO;
 import com.example.SERVER.domain.dto.company.FoundingInfoDTO;
 import com.example.SERVER.domain.dto.company.ResCompanyInfoDTO;
+import com.example.SERVER.domain.dto.job.JobInfosDTO;
 import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.domain.entity.company.CompanyDetail;
 import com.example.SERVER.domain.entity.company.Job;
@@ -143,7 +144,42 @@ public class CompanyController {
 
 		return ResponseEntity.status(HttpStatus.OK).body(job);
 	}
-
+	
+	@PreAuthorize("hasRole('ROLE_COMPANY')")
+	@GetMapping("/job-info/{id}")
+	public ResponseEntity<JobInfosDTO> getCompanyJobInfo(@PathVariable long id) throws JobNotExistException {
+		// Lấy thông tin người dùng hiện tại từ SecurityContext
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		User currentUser = userService.handleGetUserByUsername(authentication.getName());
+		
+		// Lấy thông tin của người dùng
+		Company company = currentUser.getCompany();
+		
+		// Tìm kiếm job trong danh sách công ty
+		Job existingJob = company.getJobs()
+				.stream()
+				.filter(j -> j.getId() == id).findFirst().orElseThrow(() -> {
+					return new JobNotExistException("Job không tồn tại");
+				});
+		
+		JobInfosDTO jobInfosDTO = new JobInfosDTO(
+				existingJob.getId(),
+				existingJob.getTitle(),
+				existingJob.getTags(),
+				existingJob.getMaxSalary(),
+				existingJob.getEducation(),
+				existingJob.getExperience(),
+				existingJob.getJobType(),
+				existingJob.getJobRole(),
+				existingJob.getExpirationDate().toInstant(),
+				existingJob.getJobLevel(),
+				existingJob.getDescription(),
+				existingJob.getResponsibility()
+		);
+		
+		return ResponseEntity.status(HttpStatus.OK).body(jobInfosDTO);
+	}
+	
 	@PreAuthorize("hasRole('ROLE_COMPANY')")
 	@PutMapping("/job/{id}")
 	public ResponseEntity<Job> updateJob(@PathVariable long id, @RequestBody Job job) throws JobNotExistException {

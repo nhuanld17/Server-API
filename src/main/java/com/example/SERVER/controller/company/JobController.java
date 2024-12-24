@@ -4,10 +4,12 @@ import com.example.SERVER.domain.dto.common.ResultPaginationDTO;
 import com.example.SERVER.domain.dto.job.JobDTO;
 import com.example.SERVER.domain.dto.job.JobDetailsDTO;
 import com.example.SERVER.domain.entity.candidate.Candidate;
+import com.example.SERVER.domain.entity.candidate.CandidateWishList;
 import com.example.SERVER.domain.entity.company.Application;
 import com.example.SERVER.domain.entity.company.Company;
 import com.example.SERVER.domain.entity.company.CompanyDetail;
 import com.example.SERVER.domain.entity.company.Job;
+import com.example.SERVER.repository.candidate.CandidateWishListRepository;
 import com.example.SERVER.service.canditate.CandidateService;
 import com.example.SERVER.service.company.ApplicationService;
 import com.example.SERVER.service.company.CompanyService;
@@ -36,15 +38,18 @@ public class JobController {
     private final CompanyService companyService;
     private final ApplicationService applicationService;
     private final CandidateService candidateService;
+    private final CandidateWishListRepository candidateWishListRepository;
 
     public JobController(JobService jobService,
                          CompanyService companyService,
                          ApplicationService applicationService,
-                         CandidateService candidateService) {
+                         CandidateService candidateService,
+                         CandidateWishListRepository candidateWishListRepository) {
         this.jobService = jobService;
         this.companyService = companyService;
         this.applicationService = applicationService;
         this.candidateService = candidateService;
+        this.candidateWishListRepository = candidateWishListRepository;
     }
 
     @GetMapping("/job/search")
@@ -179,6 +184,24 @@ public class JobController {
         
         this.candidateService.updateCandidate(candidate);
         this.jobService.saveJob(job);
+        
+        return ResponseEntity.ok().body("Xóa thành công");
+    }
+    
+    @PreAuthorize("hasRole('ROLE_COMPANY')")
+    @PostMapping("/delete-job/{jobId}")
+    public ResponseEntity<String> deleteJobById(@PathVariable long jobId) {
+        Job job = this.jobService.findJobById(jobId);
+        
+        // Xóa tham chiếu của job trong bảng trung gian wish_list
+        List<CandidateWishList> wishLists = this.candidateWishListRepository.findAll();
+        for (CandidateWishList wishList : wishLists) {
+            wishList.getJobs().remove(job);
+            candidateWishListRepository.save(wishList);
+        }
+        
+        // Xóa Job ( cascade xóa luôn application )
+        jobService.deleteJob(job);
         
         return ResponseEntity.ok().body("Xóa thành công");
     }
