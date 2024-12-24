@@ -1,6 +1,7 @@
 package com.example.SERVER.domain.entity.company;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -62,6 +63,7 @@ public class Job {
     @Column(name = "post_at")
     private Instant postAt;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL)
     private List<Application> applications;
 
