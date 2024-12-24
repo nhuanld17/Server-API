@@ -51,17 +51,20 @@ public class JobController {
     @PreAuthorize("hasRole('ROLE_CANDIDATE')")
     public ResponseEntity<ResultPaginationDTO> useGetAllJob(
             @RequestParam(value = "q", required = false) String filter, // Job title
+            @RequestParam(value = "experience", required = false) String experience,
+            @RequestParam(value = "jobType", required = false) String jobType,
             @RequestParam(value = "sortField", defaultValue = "id") String sortField, // trường sắp xếp
             @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection, // Hướng sắp xếp
             Pageable pageable
     ){
         // Tạo đối tượng sort từ sortField và sortDirection
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
-        
+        System.out.println(jobType);
         // Tạo đối tượng Pageable phân trang
         Pageable sortedPage = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
         
-        ResultPaginationDTO resultPaginationDTO = this.jobService.handleSearchJob(filter, sortedPage);
+        ResultPaginationDTO resultPaginationDTO = this.jobService
+                .handleSearchJob(filter, experience, jobType, sortedPage);
         
         return ResponseEntity.ok().body(resultPaginationDTO);
     }

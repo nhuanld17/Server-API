@@ -23,6 +23,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
@@ -43,17 +44,21 @@ public class CandidateController {
 	private final LinkSocialService linkSocialService;
 	private final JobService jobService;
 	private final CandidateDetailService candidateDetailService;
+
+	private final BCryptPasswordEncoder passwordEncoder;
 	
 	public CandidateController(CandidateService candidateService,
 	                           UserService userService,
 	                           LinkSocialService linkSocialService,
 	                           JobService jobService,
-	                           CandidateDetailService candidateDetailService) {
+	                           CandidateDetailService candidateDetailService,
+							   BCryptPasswordEncoder passwordEncoder) {
 		this.candidateService = candidateService;
 		this.userService = userService;
 		this.linkSocialService = linkSocialService;
 		this.jobService = jobService;
 		this.candidateDetailService = candidateDetailService;
+		this.passwordEncoder = passwordEncoder;
 	}
 	
 	@GetMapping("/basic")
@@ -181,9 +186,16 @@ public class CandidateController {
 		if (candidateContactDTO == null) {
 			throw new IsEmtyException("doi tuong update rong");
 		}
-		
-		if ((candidateContactDTO.currentPassword() != null) && (candidateContactDTO.newPassword() != null)) {
-		
+
+		if ((candidateContactDTO.currentPassword() != "") || (candidateContactDTO.newPassword() != "")) {
+			System.out.println("haha"+candidateContactDTO.newPassword());
+			if (!passwordEncoder.matches(candidateContactDTO.currentPassword(), candidate.getUser().getPassword())) {
+				throw new IsEmtyException("Mat khau hien tai khong khop");
+			}
+			if (candidateContactDTO.newPassword().equals("")) {
+				throw new IsEmtyException("Phai nhap mat khau moi");
+			}
+			candidate.getUser().setPassword(passwordEncoder.encode(candidateContactDTO.newPassword()));
 		}
 		candidate.getCandidateDetail().setLocation(candidateContactDTO.location());
 		candidate.getCandidateDetail().setPhoneNumber(candidateContactDTO.phoneNumber());

@@ -8,6 +8,7 @@ import com.example.SERVER.domain.dto.common.ResultPaginationDTO;
 import com.example.SERVER.domain.entity.company.Application;
 import com.example.SERVER.domain.entity.company.Job;
 import com.example.SERVER.repository.company.JobRepository;
+import com.example.SERVER.util.specification.JobSpecification;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -68,29 +69,24 @@ public class JobService {
 	}
 	
 	// candidate tìm kiếm job
-	public ResultPaginationDTO handleSearchJob(String filter, Pageable pageable) {
+	public ResultPaginationDTO handleSearchJob(String filter, String experience, String typeJob, Pageable pageable) {
 		ResultPaginationDTO resultPaginationDTO = new ResultPaginationDTO();
 		Meta meta = new Meta();
-		
-		
-		
-//		Page<Job> jobs = jobRepository.findAllByTitleContaining(filter, pageable);
-		
-		Page<Job> jobs = null;
-		
-		if (filter == null && filter.isEmpty()) {
-			jobs = jobRepository.findAll(pageable);
-		} else {
-			jobs = jobRepository.findAllByTitleContaining(filter, pageable);
-		}
-		
+
+		// Tạo Specification từ JobSpecification
+		Specification<Job> spec = JobSpecification.withFilters(filter, experience, typeJob);
+
+		// Lấy danh sách công việc từ repository
+		Page<Job> jobs = jobRepository.findAll(spec, pageable);
+
+		// Thiết lập meta
 		meta.setPage(pageable.getPageNumber() + 1);
 		meta.setPageSize(pageable.getPageSize());
 		meta.setPages(jobs.getTotalPages());
 		meta.setTotal(jobs.getTotalElements());
-		
 		resultPaginationDTO.setMeta(meta);
-		
+
+		// Map dữ liệu sang DTO
 		List<JobDTO> jobDTOS = jobs.getContent()
 				.stream().map(job -> new JobDTO(
 						job.getId(),
@@ -100,11 +96,11 @@ public class JobService {
 						job.getCompany().getCompanyDetail().getProfilePictureLink(),
 						job.getMaxSalary()
 				)).toList();
-		
 		resultPaginationDTO.setResult(jobDTOS);
-		
+
 		return resultPaginationDTO;
 	}
+
 	
 	public Job findJobById(long id) {
 		Optional<Job> job = jobRepository.findById(id);
